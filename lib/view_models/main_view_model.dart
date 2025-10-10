@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sedefwpwebapp/contants.dart';
@@ -128,7 +126,7 @@ class MainViewModel {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bir hata oluştu")));
     }
   }
-  Future<void> getMyUser(WidgetRef ref, BuildContext context) async {
+  Future<void> getMyUser(WidgetRef ref, BuildContext context, {bool needToGo = true}) async {
     try {
       ResponseModel res = await _mainService.getMyUser();
       if (res.isSuccess ?? false) {
@@ -136,7 +134,7 @@ class MainViewModel {
         ref.read(loggedUser.notifier).state = UserModel.fromJson(res.data);
         await getListPhoneNumbers(ref, context);
         await getAllMessages(ref, context);
-        context.go("/chat");
+        needToGo ? context.go("/chat"): null;
       }
     }else{
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
@@ -160,47 +158,112 @@ class MainViewModel {
     }
   }
   
-    Future<void> addPhoneNumber(WidgetRef ref,BuildContext context,PhoneNumberModel phoneNumber) async {
+    Future<void> addPhoneNumber(WidgetRef ref, BuildContext context, PhoneNumberModel phoneNumber) async {
     try {
       ResponseModel res = await _mainService.createPhoneNumber(phoneNumber.phoneNumber ?? "", phoneNumber.title ?? "", phoneNumber.phoneNumberId ?? "");
       if(res.isSuccess ?? false){
-          ref.read(phoneNumbers.notifier).state.add(PhoneNumberModel.fromJson(res.data));
-      }else{
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
+        // Yeni liste oluştur ve state'i güncelle
+        final currentPhones = ref.read(phoneNumbers);
+        final newPhone = PhoneNumberModel.fromJson(res.data);
+        ref.read(phoneNumbers.notifier).state = [...currentPhones, newPhone];
+        
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Telefon hattı başarıyla eklendi"),
+          backgroundColor: Colors.green,
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bir hata oluştu")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bir hata oluştu")));
     }
   }
-   Future<void> updatePhoneNumber(WidgetRef ref,BuildContext context,PhoneNumberModel phoneNumber) async {
+  Future<void> updatePhoneNumber(WidgetRef ref, BuildContext context, PhoneNumberModel phoneNumber) async {
     try {
       ResponseModel res = await _mainService.updatePhoneNumber(phoneNumber);
       if(res.isSuccess ?? false){
-          int index = ref.read(phoneNumbers).indexWhere((element) => element.id == phoneNumber.id);
-          if(index != -1){
-            ref.read(phoneNumbers.notifier).state[index] = PhoneNumberModel.fromJson(res.data);
+        // Yeni liste oluştur ve güncelle
+        final currentPhones = ref.read(phoneNumbers);
+        final updatedPhone = PhoneNumberModel.fromJson(res.data);
+        final newPhones = currentPhones.map((phone) {
+          if (phone.id == phoneNumber.id) {
+            return updatedPhone;
           }
-      }else{
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
+          return phone;
+        }).toList();
+        ref.read(phoneNumbers.notifier).state = newPhones;
+        
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Telefon hattı başarıyla güncellendi"),
+          backgroundColor: Colors.green,
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bir hata oluştu")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bir hata oluştu")));
     }
   }
-   Future<void> deletePhoneNumber(WidgetRef ref,BuildContext context,int phoneNumberId) async {
+  Future<void> deletePhoneNumber(WidgetRef ref, BuildContext context, int phoneNumberId) async {
     try {
       ResponseModel res = await _mainService.deletePhoneNumber(phoneNumberId);
       if(res.isSuccess ?? false){
-          ref.read(phoneNumbers.notifier).state.removeWhere((element) => element.id == phoneNumberId);
-      }else{
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
+        // Yeni liste oluştur (silme işlemi)
+        final currentPhones = ref.read(phoneNumbers);
+        final newPhones = currentPhones.where((phone) => phone.id != phoneNumberId).toList();
+        ref.read(phoneNumbers.notifier).state = newPhones;
+        
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Telefon hattı başarıyla silindi"),
+          backgroundColor: Colors.green,
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bir hata oluştu")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bir hata oluştu")));
+    }
+  }
+
+  Future<void> togglePhoneStatus(WidgetRef ref, BuildContext context, String phoneNumberId) async {
+    try {
+      // Önce mevcut hatı bul
+      final currentPhones = ref.read(phoneNumbers);
+      final phoneIndex = currentPhones.indexWhere((phone) => phone.phoneNumberId == phoneNumberId);
+      
+      if (phoneIndex == -1) return;
+      
+      final currentPhone = currentPhones[phoneIndex];
+      final updatedPhone = currentPhone.copyWith(
+        status: !(currentPhone.status ?? false),
+        updatedDate: DateTime.now(),
+      );
+      
+      // API çağrısını yap
+      ResponseModel res = await _mainService.updatePhoneNumber(updatedPhone);
+      if(res.isSuccess ?? false){
+        // State'i güncelle
+        final newPhones = currentPhones.map((phone) {
+          if (phone.phoneNumberId == phoneNumberId) {
+            return PhoneNumberModel.fromJson(res.data);
+          }
+          return phone;
+        }).toList();
+        ref.read(phoneNumbers.notifier).state = newPhones;
+        
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Hat durumu ${updatedPhone.status! ? 'aktif' : 'pasif'} olarak güncellendi"),
+          backgroundColor: Colors.green,
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bir hata oluştu")));
     }
   }
   
-     Future<void> getAllMessages(WidgetRef ref,BuildContext context) async {
+  Future<void> getAllMessages(WidgetRef ref, BuildContext context) async {
     try {
       ResponseModel res = await _mainService.GetAllMessages();
       if(res.isSuccess ?? false){

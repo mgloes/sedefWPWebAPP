@@ -20,7 +20,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/settings',
       name: 'settings',
-      builder: (context, state) => Container()//SettingsPage(),
+      builder: (context, state) => const SettingsPage(),
     ),
   ],
 );

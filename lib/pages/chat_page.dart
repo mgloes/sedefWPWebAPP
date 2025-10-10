@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:html' as html;
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +26,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final MainViewModel _mainViewModel = MainViewModel();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   
   String? selectedMainPhoneId;
   String? selectedPhoneId;
@@ -48,6 +51,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         _mainViewModel.messages,
         (previous, next) {
           if (next.isNotEmpty && previous != null && next.length > previous.length) {
+            // Yeni mesaj geldiğinde ses çal (sadece alınan mesajlar için)
+            final newMessage = next.last;
+            if (newMessage.senderPhoneNumber != selectedMainPhone) {
+              _playMessageSound();
+            }
+            
             // Yeni mesaj geldiğinde scroll et
             WidgetsBinding.instance.addPostFrameCallback((_) {
               _scrollToBottom();
@@ -96,6 +105,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     }
                     
                     if (isNewMessage) {
+                      // Yeni mesaj geldiğinde ses çal
+                      _playMessageSound();
+                      
                       setState(() {
                         unreadCounts[key] = (unreadCounts[key] ?? 0) + 1;
                       });
@@ -124,7 +136,32 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
+  }
+
+  // Mesaj sesi çalma fonksiyonu
+  Future<void> _playMessageSound() async {
+    try {
+      // Assets klasöründeki notification.mp3 dosyasını çal
+      await _audioPlayer.play(AssetSource('assets/sounds/notification.mp3'));
+    } catch (e) {
+      try {
+        // Alternatif: Volume ayarlayıp tekrar dene
+        await _audioPlayer.setVolume(0.5);
+        await _audioPlayer.play(AssetSource('sounds/notification.mp3'));
+      } catch (e2) {
+        // Son çare: Console'da mesaj göster
+        print('🔔 Yeni mesaj geldi! (Ses çalamadı)');
+        
+        // Web için HTML5 notification gösterebiliriz
+        try {
+          html.Notification('Yeni Mesaj', body: 'WhatsApp Web\'de yeni bir mesaj aldınız!');
+        } catch (e3) {
+          // Hiçbir şey yapma, sadece console log
+        }
+      }
+    }
   }
 
   void _selectPhone(String phoneId, String mainPhoneId) {
