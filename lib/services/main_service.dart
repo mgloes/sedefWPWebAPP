@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'package:cross_file/cross_file.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:sedefwpwebapp/contants.dart';
 import 'package:sedefwpwebapp/models/phone_number_model/phone_number_model.dart';
 import 'package:sedefwpwebapp/models/response_model/response_model.dart';
-import 'package:sedefwpwebapp/models/user_model/user_model.dart';
 import 'package:sedefwpwebapp/utilities/data_utilities.dart';
 
 class MainService {
@@ -49,6 +51,33 @@ class MainService {
       return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
     }
   }
+   Future<ResponseModel> sendMedia(
+      String mainPhoneNumber, String to, XFile mediaFile, String caption, String phoneNumberId) async {
+    try {
+      Uri address = Uri.parse("$envPath/Message/SendMedia");
+      var request = http.MultipartRequest('POST', address);
+      request.headers.addAll(getGeneralHeaders(isAuth: true,isFile: true));
+      request.fields['senderPhoneNumber'] = mainPhoneNumber;
+      request.fields['To'] = to;
+      request.fields['Caption'] = caption;
+      request.fields['PhoneNumberId'] = phoneNumberId;
+      
+        final bytes = await mediaFile.readAsBytes();
+        final contentType = _getContentType(mediaFile.name);
+        request.files.add(http.MultipartFile.fromBytes(
+          'File',
+          bytes,
+          filename: mediaFile.name,
+          contentType: MediaType.parse(contentType),
+        ));
+      var response = await request.send();
+      print("Response Code: "+ response.statusCode.toString());
+      return ResponseModel.fromJson(json.decode(await response.stream.bytesToString()));
+    } catch (e) {
+      return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
+    }
+  }
+  
     Future<ResponseModel> updatePhoneNumber(
       PhoneNumberModel phoneNumber) async {
     try {
@@ -151,6 +180,58 @@ class MainService {
     }
   }
   
-  
+  String _getContentType(String filename) {
+    final extension = filename.toLowerCase().split('.').last;
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      case 'pdf':
+        return 'application/pdf';
+      case 'doc':
+        return 'application/msword';
+      case 'docx':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      case 'xls':
+        return 'application/vnd.ms-excel';
+      case 'xlsx':
+        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      case 'ppt':
+        return 'application/vnd.ms-powerpoint';
+      case 'pptx':
+        return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+      case 'mp3':
+        return 'audio/mpeg';
+      case 'wav':
+        return 'audio/wav';
+      case 'ogg':
+        return 'audio/ogg';
+      case 'mp4':
+        return 'video/mp4';
+      case 'avi':
+        return 'video/avi';
+      case 'mov':
+        return 'video/quicktime';
+      case 'txt':
+        return 'text/plain';
+      case 'csv':
+        return 'text/csv';
+      case 'zip':
+        return 'application/zip';
+      case 'rar':
+        return 'application/x-rar-compressed';
+      case '7z':
+        return 'application/x-7z-compressed';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
 
 }

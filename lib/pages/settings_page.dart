@@ -380,7 +380,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        loggedUser.name ?? 'Kullanıcı',
+                        (loggedUser.name ?? 'Kullanıcı') + ' ' + (loggedUser.surname ?? ''),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,

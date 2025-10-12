@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -103,6 +104,20 @@ class MainViewModel {
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bir hata oluştu")));
+    }
+  }
+
+  Future<void> sendMedia(WidgetRef ref, BuildContext context, String mainPhoneNumber, String to, XFile mediaFile, String caption, String phoneNumberId) async {
+    try {
+      ResponseModel res = await _mainService.sendMedia(mainPhoneNumber, to, mediaFile, caption, phoneNumberId);
+      print(res);
+      if(res.isSuccess ?? false){
+        ref.read(messages.notifier).state.add(MessageModel.fromJson(res.data));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bir hata oluştu")));
     }
   }
 

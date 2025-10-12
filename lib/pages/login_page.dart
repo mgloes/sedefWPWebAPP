@@ -121,14 +121,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                       const SizedBox(height: 32),
 
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
+                      AutofillGroup(
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
                             // Email Field
                             TextFormField(
                               controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
+                              keyboardType: TextInputType.name,
+                              autofillHints: const [AutofillHints.username],
                               decoration: InputDecoration(
                                 labelText: 'Kullanıcı Adı',
                                 hintText: 'admin',
@@ -158,6 +160,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             TextFormField(
                               controller: _passwordController,
                               obscureText: !_isPasswordVisible,
+                              autofillHints: const [AutofillHints.password],
                               decoration: InputDecoration(
                                 labelText: 'Şifre',
                                 hintText: 'Şifrenizi giriniz',
@@ -263,6 +266,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                           ],
                         ),
+                      ),
                       ),
                     ],
                   ),
