@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sedefwpwebapp/models/phone_number_model/phone_number_model.dart';
+import 'package:sedefwpwebapp/models/user_model/user_model.dart';
 import 'package:sedefwpwebapp/utilities/data_utilities.dart';
 import 'package:sedefwpwebapp/view_models/main_view_model.dart';
 import '../contants.dart';
@@ -20,6 +21,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   final _editPhoneController = TextEditingController();
   final _editPhoneNumberIdController = TextEditingController();
   final _editNameController = TextEditingController();
+  
+  // Admin için yeni user ekleme controller'ları
+  final _newUserNameController = TextEditingController();
+  final _newUserSurnameController = TextEditingController();
+  final _newUserEmailController = TextEditingController();
+  final _newUserPasswordController = TextEditingController();
+  
+  // Admin için user düzenleme controller'ları
+  final _editUserNameController = TextEditingController();
+  final _editUserSurnameController = TextEditingController();
+  final _editUserEmailController = TextEditingController();
+  final _editUserPasswordController = TextEditingController();
+  
   final MainViewModel _mainViewModel = MainViewModel();
 
   @override
@@ -38,6 +52,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       return;
     }
     await _mainViewModel.getMyUser(ref, context,needToGo: false);
+    
+    // Eğer kullanıcı ADMIN ise user listesini yükle
+    final loggedUser = ref.read(_mainViewModel.loggedUser);
+    if (loggedUser.role == 'ADMIN') {
+      await _mainViewModel.getListUser(ref, context);
+    }else{
+        context.go('/chat');
+    }
   }
 
   @override
@@ -47,6 +69,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     _editPhoneNumberIdController.dispose();
     _editPhoneController.dispose();
     _editNameController.dispose();
+    
+    // Admin controller'ları
+    _newUserNameController.dispose();
+    _newUserSurnameController.dispose();
+    _newUserEmailController.dispose();
+    _newUserPasswordController.dispose();
+    _editUserNameController.dispose();
+    _editUserSurnameController.dispose();
+    _editUserEmailController.dispose();
+    _editUserPasswordController.dispose();
+    
     super.dispose();
   }
 
@@ -180,8 +213,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             child: const Text('İptal'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop();
+              await sharedPrefsClear("accessToken");
               context.go('/');
             },
             style: ElevatedButton.styleFrom(
@@ -201,6 +235,312 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         content: Text(message),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  // Admin fonksiyonları
+  Future<void> _addUser() async {
+    if (_newUserNameController.text.trim().isEmpty || 
+        _newUserSurnameController.text.trim().isEmpty ||
+        _newUserEmailController.text.trim().isEmpty ||
+        _newUserPasswordController.text.trim().isEmpty) {
+      _showErrorSnackBar('Lütfen tüm alanları doldurun');
+      return;
+    }
+
+    await _mainViewModel.createCustomerService(
+      ref, 
+      context, 
+      _newUserNameController.text.trim(),
+      _newUserSurnameController.text.trim(),
+      _newUserEmailController.text.trim(),
+      _newUserPasswordController.text.trim(),
+    );
+
+    _newUserNameController.clear();
+    _newUserSurnameController.clear();
+    _newUserEmailController.clear();
+    _newUserPasswordController.clear();
+  }
+
+  Future<void> _editUser(UserModel user) async {
+    _editUserNameController.text = user.name ?? '';
+    _editUserSurnameController.text = user.surname ?? '';
+    _editUserEmailController.text = user.emailAddress ?? '';
+    _editUserPasswordController.text = '';
+    
+    // Kullanıcının mevcut telefon numarası listesini al
+    List<int> userPhoneNumberIds = [];
+    if (user.phoneNumberList != null && user.phoneNumberList!.isNotEmpty) {
+      userPhoneNumberIds = user.phoneNumberList!.split(',').map((e) => int.tryParse(e.trim()) ?? 0).toList();
+    }
+
+    // Kullanıcının mevcut status'u
+    bool userStatus = user.status ?? false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final phoneNumbers = ref.watch(_mainViewModel.phoneNumbers);
+          
+          return AlertDialog(
+            title: const Text('Kullanıcı Düzenle'),
+            content: Container(
+              width: 500,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: _editUserNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Ad',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _editUserSurnameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Soyad',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _editUserEmailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _editUserPasswordController,
+                      decoration: const InputDecoration(
+                        labelText: 'Yeni Şifre (Boş bırakabilirsiniz)',
+                        border: OutlineInputBorder(),
+                      ),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Kullanıcı Durumu
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.person_outline, size: 20),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Kullanıcı Durumu:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const Spacer(),
+                          Switch(
+                            value: userStatus,
+                            onChanged: (bool value) {
+                              setDialogState(() {
+                                userStatus = value;
+                              });
+                            },
+                            activeColor: secondaryColor,
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: userStatus ? Colors.green : Colors.red,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              userStatus ? 'Aktif' : 'Pasif',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Telefon Numarası Seçimi
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(8),
+                                topRight: Radius.circular(8),
+                              ),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.phone, size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Telefon Numarası Seçimi',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            constraints: const BoxConstraints(maxHeight: 200),
+                            child: phoneNumbers.isEmpty
+                                ? const Center(
+                                    child: Text(
+                                      'Henüz telefon numarası bulunmamaktadır.',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: phoneNumbers.length,
+                                    itemBuilder: (context, index) {
+                                      final phone = phoneNumbers[index];
+                                      final phoneId = phone.id!;
+                                      final isChecked = userPhoneNumberIds.contains(phoneId);
+                                      
+                                      return CheckboxListTile(
+                                        value: isChecked,
+                                        onChanged: (bool? value) {
+                                          setDialogState(() {
+                                            if (value == true) {
+                                              if (!userPhoneNumberIds.contains(phoneId)) {
+                                                userPhoneNumberIds.add(phoneId);
+                                              }
+                                            } else {
+                                              userPhoneNumberIds.remove(phoneId);
+                                            }
+                                          });
+                                        },
+                                        title: Text(
+                                          phone.title ?? 'Bilinmeyen Hat',
+                                          style: const TextStyle(fontWeight: FontWeight.w500),
+                                        ),
+                                        subtitle: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(phone.phoneNumber ?? ''),
+                                            Text(
+                                              'ID: ${phone.phoneNumberId ?? ''}',
+                                              style: const TextStyle(fontSize: 12),
+                                            ),
+                                          ],
+                                        ),
+                                        secondary: CircleAvatar(
+                                          radius: 12,
+                                          backgroundColor: (phone.status ?? false) ? Colors.green : Colors.grey,
+                                          child: Icon(
+                                            (phone.status ?? false) ? Icons.check : Icons.close,
+                                            color: Colors.white,
+                                            size: 14,
+                                          ),
+                                        ),
+                                        dense: true,
+                                        controlAffinity: ListTileControlAffinity.leading,
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('İptal'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_editUserNameController.text.trim().isEmpty || 
+                      _editUserSurnameController.text.trim().isEmpty ||
+                      _editUserEmailController.text.trim().isEmpty) {
+                    return;
+                  }
+                  
+                  // Seçilen telefon numarası ID'lerini virgülle ayırarak birleştir
+                  final selectedPhoneNumberIds = userPhoneNumberIds.join(',');
+                  
+                  await _mainViewModel.updateCustomerService(
+                    ref, 
+                    context, 
+                    user.id!,
+                    _editUserNameController.text.trim(),
+                    _editUserSurnameController.text.trim(),
+                    _editUserEmailController.text.trim(),
+                    _editUserPasswordController.text.trim().isEmpty ? 
+                      user.password! : _editUserPasswordController.text.trim(),
+                    userStatus, // userStatus değişkenini kullan
+                    selectedPhoneNumberIds,
+                  );
+                  
+                  Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: secondaryColor,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Güncelle'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _removeUser(int userId) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Kullanıcı Sil'),
+        content: const Text('Bu kullanıcıyı silmek istediğinizden emin misiniz?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _mainViewModel.deleteCustomerService(ref, context, userId);
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Sil'),
+          ),
+        ],
       ),
     );
   }
@@ -299,30 +639,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   const SizedBox(height: 32),
                   
                   Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Left Column - User Info & Add Phone
-                        Expanded(
-                          flex: 1,
-                          child: Column(
-                            children: [
-                              _buildUserInfoCard(loggedUser, phoneNumbers),
-                              const SizedBox(height: 24),
-                              _buildAddPhoneCard(),
-                            ],
-                          ),
-                        ),
-                        
-                        const SizedBox(width: 24),
-                        
-                        // Right Column - Phone List
-                        Expanded(
-                          flex: 1,
-                          child: _buildPhoneListCard(phoneNumbers),
-                        ),
-                      ],
-                    ),
+                    child: loggedUser.role == 'ADMIN' 
+                      ? _buildAdminPanel(loggedUser, phoneNumbers)
+                      : _buildUserPanel(loggedUser, phoneNumbers),
                   ),
                 ],
               ),
@@ -399,7 +718,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ],
             ),
             const SizedBox(height: 24),
-            _buildInfoRow(Icons.person_outline, 'Kullanıcı Adı', loggedUser.username ?? 'E-posta bulunamadı'),
+            _buildInfoRow(Icons.person_outline, 'Kullanıcı Adı', loggedUser.emailAddress ?? 'E-posta bulunamadı'),
             // _buildInfoRow(Icons.access_time, 'Son Giriş', _formatDateTime(DateTime.now())),
           ],
         ),
@@ -618,6 +937,399 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // Normal kullanıcı paneli
+  Widget _buildUserPanel(UserModel loggedUser, List<PhoneNumberModel> phoneNumbers) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left Column - User Info & Add Phone
+        Expanded(
+          flex: 1,
+          child: Column(
+            children: [
+              _buildUserInfoCard(loggedUser, phoneNumbers),
+              const SizedBox(height: 24),
+              _buildAddPhoneCard(),
+            ],
+          ),
+        ),
+        
+        const SizedBox(width: 24),
+        
+        // Right Column - Phone List
+        Expanded(
+          flex: 1,
+          child: _buildPhoneListCard(phoneNumbers),
+        ),
+      ],
+    );
+  }
+
+  // Admin paneli
+  Widget _buildAdminPanel(UserModel loggedUser, List<PhoneNumberModel> phoneNumbers) {
+    final users = ref.watch(_mainViewModel.users);
+    
+    return Column(
+      children: [
+        // Tab bar için Container
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: DefaultTabController(
+            length: 2,
+            child: Column(
+              children: [
+                TabBar(
+                  tabs: [
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.people),
+                          SizedBox(width: 8),
+                          Text('Kullanıcı Yönetimi'),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.phone),
+                          SizedBox(width: 8),
+                          Text('Hat Yönetimi'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  labelColor: secondaryColor,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: secondaryColor,
+                ),
+                Container(
+                  height: 550,
+                  child: TabBarView(
+                    children: [
+                      // Kullanıcı Yönetimi Tab
+                      _buildUserManagementTab(users, phoneNumbers),
+                      // Hat Yönetimi Tab
+                      _buildPhoneManagementTab(loggedUser, phoneNumbers),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Kullanıcı yönetimi tab'ı
+  Widget _buildUserManagementTab(List<UserModel> users, List<PhoneNumberModel> phoneNumbers) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Sol taraf - Yeni kullanıcı ekleme
+          Expanded(
+            flex: 1,
+            child: _buildAddUserCard(),
+          ),
+          
+          const SizedBox(width: 16),
+          
+          // Sağ taraf - Kullanıcı listesi
+          Expanded(
+            flex: 2,
+            child: _buildUserListCard(users),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Hat yönetimi tab'ı
+  Widget _buildPhoneManagementTab(UserModel loggedUser, List<PhoneNumberModel> phoneNumbers) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Sol taraf - Kullanıcı bilgisi ve hat ekleme
+          Expanded(
+            flex: 1,
+            child: Column(
+              children: [
+                _buildUserInfoCard(loggedUser, phoneNumbers),
+                const SizedBox(height: 12),
+                _buildAddPhoneCard(),
+              ],
+            ),
+          ),
+          
+          const SizedBox(width: 16),
+          
+          // Sağ taraf - Hat listesi
+          Expanded(
+            flex: 1,
+            child: _buildPhoneListCard(phoneNumbers),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Yeni kullanıcı ekleme kartı
+  Widget _buildAddUserCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Yeni Kullanıcı Ekle',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _newUserNameController,
+              decoration: const InputDecoration(
+                labelText: 'Ad',
+                hintText: 'örn: Ali',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _newUserSurnameController,
+              decoration: const InputDecoration(
+                labelText: 'Soyad',
+                hintText: 'örn: Veli',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person_outline),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _newUserEmailController,
+              decoration: const InputDecoration(
+                labelText: 'Email/Kullanıcı Adı',
+                hintText: 'örn: ali.veli@email.com',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.email),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _newUserPasswordController,
+              decoration: const InputDecoration(
+                labelText: 'Şifre',
+                hintText: 'Güçlü bir şifre oluşturun',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.lock),
+              ),
+              obscureText: true,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _addUser,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: secondaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                icon: const Icon(Icons.add),
+                label: const Text('Kullanıcı Ekle'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Kullanıcı listesi kartı
+  Widget _buildUserListCard(List<UserModel> users) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Kullanıcılar',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${users.length} kullanıcı',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.builder(
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final user = users[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: user.role == 'ADMIN' ? Colors.orange : secondaryColor,
+                            child: Icon(
+                              user.role == 'ADMIN' ? Icons.admin_panel_settings : Icons.person,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${user.name ?? 'İsim'} ${user.surname ?? 'Soyisim'}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Text(
+                                  user.emailAddress ?? 'Email bulunamadı',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      user.role ?? 'Rol belirtilmemiş',
+                                      style: TextStyle(
+                                        color: user.role == 'ADMIN' ? Colors.orange : Colors.blue,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Status göstergesi
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: (user.status ?? false) ? Colors.green : Colors.red,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        (user.status ?? false) ? 'Aktif' : 'Pasif',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                // Telefon numarası sayısını göster
+                                if (user.phoneNumberList != null && user.phoneNumberList!.isNotEmpty)
+                                  Text(
+                                    '${user.phoneNumberList!.split(',').length} telefon hattı',
+                                    style: TextStyle(
+                                      color: Colors.green.shade600,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  )
+                                else
+                                  Text(
+                                    'Telefon hattı yok',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade500,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          // Status Switch (sadece ADMIN olmayan kullanıcılar için)
+                          if (user.role != 'ADMIN') ...[
+                            Column(
+                              children: [
+                                Switch(
+                                  value: user.status ?? false,
+                                  onChanged: (bool value) {
+                                    _mainViewModel.toggleUserStatus(ref, context, user.id!, user.status ?? false);
+                                  },
+                                  activeColor: secondaryColor,
+                                ),
+                                Text(
+                                  'Durum',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          if (user.role != 'ADMIN') ...[
+                            IconButton(
+                              onPressed: () => _editUser(user),
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              tooltip: 'Düzenle',
+                            ),
+                            IconButton(
+                              onPressed: () => _removeUser(user.id!),
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              tooltip: 'Sil',
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

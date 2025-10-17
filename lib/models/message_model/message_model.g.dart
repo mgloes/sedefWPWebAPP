@@ -23,6 +23,7 @@ _MessageModel _$MessageModelFromJson(Map<String, dynamic> json) =>
       imageCaption: json['imageCaption'] as String?,
       imageUrl: json['imageUrl'] as String?,
       textBody: json['textBody'] as String?,
+      isConversation: json['isConversation'] as bool?,
       timestamp: json['timestamp'] as String?,
     );
 
@@ -39,5 +40,6 @@ Map<String, dynamic> _$MessageModelToJson(_MessageModel instance) =>
       'imageCaption': instance.imageCaption,
       'imageUrl': instance.imageUrl,
       'textBody': instance.textBody,
+      'isConversation': instance.isConversation,
       'timestamp': instance.timestamp,
     };

@@ -16,6 +16,7 @@ abstract class MessageModel with _$MessageModel {
   String? imageCaption,
   String? imageUrl,
   String? textBody,
+  bool? isConversation,
   String? timestamp
 
   }) = _MessageModel;

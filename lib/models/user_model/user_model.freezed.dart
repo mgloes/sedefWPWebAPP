@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserModel {
 
- int? get id; set id(int? value); DateTime? get createdDate; set createdDate(DateTime? value); DateTime? get updatedDate; set updatedDate(DateTime? value); String? get username; set username(String? value); String? get password; set password(String? value); String? get name; set name(String? value); String? get surname; set surname(String? value); String? get role; set role(String? value);
+ int? get id; set id(int? value); DateTime? get createdDate; set createdDate(DateTime? value); DateTime? get updatedDate; set updatedDate(DateTime? value); String? get emailAddress; set emailAddress(String? value); String? get password; set password(String? value); String? get name; set name(String? value); String? get surname; set surname(String? value); String? get phoneNumberList; set phoneNumberList(String? value); String? get role; set role(String? value); bool? get status; set status(bool? value);
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,7 +30,7 @@ $UserModelCopyWith<UserModel> get copyWith => _$UserModelCopyWithImpl<UserModel>
 
 @override
 String toString() {
-  return 'UserModel(id: $id, createdDate: $createdDate, updatedDate: $updatedDate, username: $username, password: $password, name: $name, surname: $surname, role: $role)';
+  return 'UserModel(id: $id, createdDate: $createdDate, updatedDate: $updatedDate, emailAddress: $emailAddress, password: $password, name: $name, surname: $surname, phoneNumberList: $phoneNumberList, role: $role, status: $status)';
 }
 
 
@@ -41,7 +41,7 @@ abstract mixin class $UserModelCopyWith<$Res>  {
   factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) _then) = _$UserModelCopyWithImpl;
 @useResult
 $Res call({
- int? id, DateTime? createdDate, DateTime? updatedDate, String? username, String? password, String? name, String? surname, String? role
+ int? id, DateTime? createdDate, DateTime? updatedDate, String? emailAddress, String? password, String? name, String? surname, String? phoneNumberList, String? role, bool? status
 });
 
 
@@ -58,17 +58,19 @@ class _$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? createdDate = freezed,Object? updatedDate = freezed,Object? username = freezed,Object? password = freezed,Object? name = freezed,Object? surname = freezed,Object? role = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? createdDate = freezed,Object? updatedDate = freezed,Object? emailAddress = freezed,Object? password = freezed,Object? name = freezed,Object? surname = freezed,Object? phoneNumberList = freezed,Object? role = freezed,Object? status = freezed,}) {
   return _then(_self.copyWith(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,createdDate: freezed == createdDate ? _self.createdDate : createdDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,updatedDate: freezed == updatedDate ? _self.updatedDate : updatedDate // ignore: cast_nullable_to_non_nullable
-as DateTime?,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
+as DateTime?,emailAddress: freezed == emailAddress ? _self.emailAddress : emailAddress // ignore: cast_nullable_to_non_nullable
 as String?,password: freezed == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
 as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,surname: freezed == surname ? _self.surname : surname // ignore: cast_nullable_to_non_nullable
+as String?,phoneNumberList: freezed == phoneNumberList ? _self.phoneNumberList : phoneNumberList // ignore: cast_nullable_to_non_nullable
 as String?,role: freezed == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 
@@ -153,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? username,  String? password,  String? name,  String? surname,  String? role)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? emailAddress,  String? password,  String? name,  String? surname,  String? phoneNumberList,  String? role,  bool? status)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.createdDate,_that.updatedDate,_that.username,_that.password,_that.name,_that.surname,_that.role);case _:
+return $default(_that.id,_that.createdDate,_that.updatedDate,_that.emailAddress,_that.password,_that.name,_that.surname,_that.phoneNumberList,_that.role,_that.status);case _:
   return orElse();
 
 }
@@ -174,10 +176,10 @@ return $default(_that.id,_that.createdDate,_that.updatedDate,_that.username,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? username,  String? password,  String? name,  String? surname,  String? role)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? emailAddress,  String? password,  String? name,  String? surname,  String? phoneNumberList,  String? role,  bool? status)  $default,) {final _that = this;
 switch (_that) {
 case _UserModel():
-return $default(_that.id,_that.createdDate,_that.updatedDate,_that.username,_that.password,_that.name,_that.surname,_that.role);case _:
+return $default(_that.id,_that.createdDate,_that.updatedDate,_that.emailAddress,_that.password,_that.name,_that.surname,_that.phoneNumberList,_that.role,_that.status);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +196,10 @@ return $default(_that.id,_that.createdDate,_that.updatedDate,_that.username,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? username,  String? password,  String? name,  String? surname,  String? role)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? emailAddress,  String? password,  String? name,  String? surname,  String? phoneNumberList,  String? role,  bool? status)?  $default,) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.createdDate,_that.updatedDate,_that.username,_that.password,_that.name,_that.surname,_that.role);case _:
+return $default(_that.id,_that.createdDate,_that.updatedDate,_that.emailAddress,_that.password,_that.name,_that.surname,_that.phoneNumberList,_that.role,_that.status);case _:
   return null;
 
 }
@@ -209,17 +211,19 @@ return $default(_that.id,_that.createdDate,_that.updatedDate,_that.username,_tha
 @JsonSerializable()
 
 class _UserModel extends UserModel {
-   _UserModel({this.id, this.createdDate, this.updatedDate, this.username, this.password, this.name, this.surname, this.role}): super._();
+   _UserModel({this.id, this.createdDate, this.updatedDate, this.emailAddress, this.password, this.name, this.surname, this.phoneNumberList, this.role, this.status}): super._();
   factory _UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
 
 @override  int? id;
 @override  DateTime? createdDate;
 @override  DateTime? updatedDate;
-@override  String? username;
+@override  String? emailAddress;
 @override  String? password;
 @override  String? name;
 @override  String? surname;
+@override  String? phoneNumberList;
 @override  String? role;
+@override  bool? status;
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
@@ -236,7 +240,7 @@ Map<String, dynamic> toJson() {
 
 @override
 String toString() {
-  return 'UserModel(id: $id, createdDate: $createdDate, updatedDate: $updatedDate, username: $username, password: $password, name: $name, surname: $surname, role: $role)';
+  return 'UserModel(id: $id, createdDate: $createdDate, updatedDate: $updatedDate, emailAddress: $emailAddress, password: $password, name: $name, surname: $surname, phoneNumberList: $phoneNumberList, role: $role, status: $status)';
 }
 
 
@@ -247,7 +251,7 @@ abstract mixin class _$UserModelCopyWith<$Res> implements $UserModelCopyWith<$Re
   factory _$UserModelCopyWith(_UserModel value, $Res Function(_UserModel) _then) = __$UserModelCopyWithImpl;
 @override @useResult
 $Res call({
- int? id, DateTime? createdDate, DateTime? updatedDate, String? username, String? password, String? name, String? surname, String? role
+ int? id, DateTime? createdDate, DateTime? updatedDate, String? emailAddress, String? password, String? name, String? surname, String? phoneNumberList, String? role, bool? status
 });
 
 
@@ -264,17 +268,19 @@ class __$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? createdDate = freezed,Object? updatedDate = freezed,Object? username = freezed,Object? password = freezed,Object? name = freezed,Object? surname = freezed,Object? role = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? createdDate = freezed,Object? updatedDate = freezed,Object? emailAddress = freezed,Object? password = freezed,Object? name = freezed,Object? surname = freezed,Object? phoneNumberList = freezed,Object? role = freezed,Object? status = freezed,}) {
   return _then(_UserModel(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,createdDate: freezed == createdDate ? _self.createdDate : createdDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,updatedDate: freezed == updatedDate ? _self.updatedDate : updatedDate // ignore: cast_nullable_to_non_nullable
-as DateTime?,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
+as DateTime?,emailAddress: freezed == emailAddress ? _self.emailAddress : emailAddress // ignore: cast_nullable_to_non_nullable
 as String?,password: freezed == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
 as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,surname: freezed == surname ? _self.surname : surname // ignore: cast_nullable_to_non_nullable
+as String?,phoneNumberList: freezed == phoneNumberList ? _self.phoneNumberList : phoneNumberList // ignore: cast_nullable_to_non_nullable
 as String?,role: freezed == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 

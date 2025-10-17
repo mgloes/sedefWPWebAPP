@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MessageModel {
 
- int? get id; set id(int? value); DateTime? get createdDate; set createdDate(DateTime? value); DateTime? get updatedDate; set updatedDate(DateTime? value); String? get senderPhoneNumber; set senderPhoneNumber(String? value); String? get senderNameSurname; set senderNameSurname(String? value); String? get receiverPhoneNumber; set receiverPhoneNumber(String? value); String? get messageType; set messageType(String? value); String? get messageId; set messageId(String? value); String? get imageCaption; set imageCaption(String? value); String? get imageUrl; set imageUrl(String? value); String? get textBody; set textBody(String? value); String? get timestamp; set timestamp(String? value);
+ int? get id; set id(int? value); DateTime? get createdDate; set createdDate(DateTime? value); DateTime? get updatedDate; set updatedDate(DateTime? value); String? get senderPhoneNumber; set senderPhoneNumber(String? value); String? get senderNameSurname; set senderNameSurname(String? value); String? get receiverPhoneNumber; set receiverPhoneNumber(String? value); String? get messageType; set messageType(String? value); String? get messageId; set messageId(String? value); String? get imageCaption; set imageCaption(String? value); String? get imageUrl; set imageUrl(String? value); String? get textBody; set textBody(String? value); bool? get isConversation; set isConversation(bool? value); String? get timestamp; set timestamp(String? value);
 /// Create a copy of MessageModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,7 +30,7 @@ $MessageModelCopyWith<MessageModel> get copyWith => _$MessageModelCopyWithImpl<M
 
 @override
 String toString() {
-  return 'MessageModel(id: $id, createdDate: $createdDate, updatedDate: $updatedDate, senderPhoneNumber: $senderPhoneNumber, senderNameSurname: $senderNameSurname, receiverPhoneNumber: $receiverPhoneNumber, messageType: $messageType, messageId: $messageId, imageCaption: $imageCaption, imageUrl: $imageUrl, textBody: $textBody, timestamp: $timestamp)';
+  return 'MessageModel(id: $id, createdDate: $createdDate, updatedDate: $updatedDate, senderPhoneNumber: $senderPhoneNumber, senderNameSurname: $senderNameSurname, receiverPhoneNumber: $receiverPhoneNumber, messageType: $messageType, messageId: $messageId, imageCaption: $imageCaption, imageUrl: $imageUrl, textBody: $textBody, isConversation: $isConversation, timestamp: $timestamp)';
 }
 
 
@@ -41,7 +41,7 @@ abstract mixin class $MessageModelCopyWith<$Res>  {
   factory $MessageModelCopyWith(MessageModel value, $Res Function(MessageModel) _then) = _$MessageModelCopyWithImpl;
 @useResult
 $Res call({
- int? id, DateTime? createdDate, DateTime? updatedDate, String? senderPhoneNumber, String? senderNameSurname, String? receiverPhoneNumber, String? messageType, String? messageId, String? imageCaption, String? imageUrl, String? textBody, String? timestamp
+ int? id, DateTime? createdDate, DateTime? updatedDate, String? senderPhoneNumber, String? senderNameSurname, String? receiverPhoneNumber, String? messageType, String? messageId, String? imageCaption, String? imageUrl, String? textBody, bool? isConversation, String? timestamp
 });
 
 
@@ -58,7 +58,7 @@ class _$MessageModelCopyWithImpl<$Res>
 
 /// Create a copy of MessageModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? createdDate = freezed,Object? updatedDate = freezed,Object? senderPhoneNumber = freezed,Object? senderNameSurname = freezed,Object? receiverPhoneNumber = freezed,Object? messageType = freezed,Object? messageId = freezed,Object? imageCaption = freezed,Object? imageUrl = freezed,Object? textBody = freezed,Object? timestamp = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? createdDate = freezed,Object? updatedDate = freezed,Object? senderPhoneNumber = freezed,Object? senderNameSurname = freezed,Object? receiverPhoneNumber = freezed,Object? messageType = freezed,Object? messageId = freezed,Object? imageCaption = freezed,Object? imageUrl = freezed,Object? textBody = freezed,Object? isConversation = freezed,Object? timestamp = freezed,}) {
   return _then(_self.copyWith(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,createdDate: freezed == createdDate ? _self.createdDate : createdDate // ignore: cast_nullable_to_non_nullable
@@ -71,7 +71,8 @@ as String?,messageId: freezed == messageId ? _self.messageId : messageId // igno
 as String?,imageCaption: freezed == imageCaption ? _self.imageCaption : imageCaption // ignore: cast_nullable_to_non_nullable
 as String?,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,textBody: freezed == textBody ? _self.textBody : textBody // ignore: cast_nullable_to_non_nullable
-as String?,timestamp: freezed == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
+as String?,isConversation: freezed == isConversation ? _self.isConversation : isConversation // ignore: cast_nullable_to_non_nullable
+as bool?,timestamp: freezed == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -157,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? senderPhoneNumber,  String? senderNameSurname,  String? receiverPhoneNumber,  String? messageType,  String? messageId,  String? imageCaption,  String? imageUrl,  String? textBody,  String? timestamp)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? senderPhoneNumber,  String? senderNameSurname,  String? receiverPhoneNumber,  String? messageType,  String? messageId,  String? imageCaption,  String? imageUrl,  String? textBody,  bool? isConversation,  String? timestamp)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MessageModel() when $default != null:
-return $default(_that.id,_that.createdDate,_that.updatedDate,_that.senderPhoneNumber,_that.senderNameSurname,_that.receiverPhoneNumber,_that.messageType,_that.messageId,_that.imageCaption,_that.imageUrl,_that.textBody,_that.timestamp);case _:
+return $default(_that.id,_that.createdDate,_that.updatedDate,_that.senderPhoneNumber,_that.senderNameSurname,_that.receiverPhoneNumber,_that.messageType,_that.messageId,_that.imageCaption,_that.imageUrl,_that.textBody,_that.isConversation,_that.timestamp);case _:
   return orElse();
 
 }
@@ -178,10 +179,10 @@ return $default(_that.id,_that.createdDate,_that.updatedDate,_that.senderPhoneNu
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? senderPhoneNumber,  String? senderNameSurname,  String? receiverPhoneNumber,  String? messageType,  String? messageId,  String? imageCaption,  String? imageUrl,  String? textBody,  String? timestamp)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? senderPhoneNumber,  String? senderNameSurname,  String? receiverPhoneNumber,  String? messageType,  String? messageId,  String? imageCaption,  String? imageUrl,  String? textBody,  bool? isConversation,  String? timestamp)  $default,) {final _that = this;
 switch (_that) {
 case _MessageModel():
-return $default(_that.id,_that.createdDate,_that.updatedDate,_that.senderPhoneNumber,_that.senderNameSurname,_that.receiverPhoneNumber,_that.messageType,_that.messageId,_that.imageCaption,_that.imageUrl,_that.textBody,_that.timestamp);case _:
+return $default(_that.id,_that.createdDate,_that.updatedDate,_that.senderPhoneNumber,_that.senderNameSurname,_that.receiverPhoneNumber,_that.messageType,_that.messageId,_that.imageCaption,_that.imageUrl,_that.textBody,_that.isConversation,_that.timestamp);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +199,10 @@ return $default(_that.id,_that.createdDate,_that.updatedDate,_that.senderPhoneNu
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? senderPhoneNumber,  String? senderNameSurname,  String? receiverPhoneNumber,  String? messageType,  String? messageId,  String? imageCaption,  String? imageUrl,  String? textBody,  String? timestamp)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  DateTime? createdDate,  DateTime? updatedDate,  String? senderPhoneNumber,  String? senderNameSurname,  String? receiverPhoneNumber,  String? messageType,  String? messageId,  String? imageCaption,  String? imageUrl,  String? textBody,  bool? isConversation,  String? timestamp)?  $default,) {final _that = this;
 switch (_that) {
 case _MessageModel() when $default != null:
-return $default(_that.id,_that.createdDate,_that.updatedDate,_that.senderPhoneNumber,_that.senderNameSurname,_that.receiverPhoneNumber,_that.messageType,_that.messageId,_that.imageCaption,_that.imageUrl,_that.textBody,_that.timestamp);case _:
+return $default(_that.id,_that.createdDate,_that.updatedDate,_that.senderPhoneNumber,_that.senderNameSurname,_that.receiverPhoneNumber,_that.messageType,_that.messageId,_that.imageCaption,_that.imageUrl,_that.textBody,_that.isConversation,_that.timestamp);case _:
   return null;
 
 }
@@ -213,7 +214,7 @@ return $default(_that.id,_that.createdDate,_that.updatedDate,_that.senderPhoneNu
 @JsonSerializable()
 
 class _MessageModel extends MessageModel {
-   _MessageModel({this.id, this.createdDate, this.updatedDate, this.senderPhoneNumber, this.senderNameSurname, this.receiverPhoneNumber, this.messageType, this.messageId, this.imageCaption, this.imageUrl, this.textBody, this.timestamp}): super._();
+   _MessageModel({this.id, this.createdDate, this.updatedDate, this.senderPhoneNumber, this.senderNameSurname, this.receiverPhoneNumber, this.messageType, this.messageId, this.imageCaption, this.imageUrl, this.textBody, this.isConversation, this.timestamp}): super._();
   factory _MessageModel.fromJson(Map<String, dynamic> json) => _$MessageModelFromJson(json);
 
 @override  int? id;
@@ -227,6 +228,7 @@ class _MessageModel extends MessageModel {
 @override  String? imageCaption;
 @override  String? imageUrl;
 @override  String? textBody;
+@override  bool? isConversation;
 @override  String? timestamp;
 
 /// Create a copy of MessageModel
@@ -244,7 +246,7 @@ Map<String, dynamic> toJson() {
 
 @override
 String toString() {
-  return 'MessageModel(id: $id, createdDate: $createdDate, updatedDate: $updatedDate, senderPhoneNumber: $senderPhoneNumber, senderNameSurname: $senderNameSurname, receiverPhoneNumber: $receiverPhoneNumber, messageType: $messageType, messageId: $messageId, imageCaption: $imageCaption, imageUrl: $imageUrl, textBody: $textBody, timestamp: $timestamp)';
+  return 'MessageModel(id: $id, createdDate: $createdDate, updatedDate: $updatedDate, senderPhoneNumber: $senderPhoneNumber, senderNameSurname: $senderNameSurname, receiverPhoneNumber: $receiverPhoneNumber, messageType: $messageType, messageId: $messageId, imageCaption: $imageCaption, imageUrl: $imageUrl, textBody: $textBody, isConversation: $isConversation, timestamp: $timestamp)';
 }
 
 
@@ -255,7 +257,7 @@ abstract mixin class _$MessageModelCopyWith<$Res> implements $MessageModelCopyWi
   factory _$MessageModelCopyWith(_MessageModel value, $Res Function(_MessageModel) _then) = __$MessageModelCopyWithImpl;
 @override @useResult
 $Res call({
- int? id, DateTime? createdDate, DateTime? updatedDate, String? senderPhoneNumber, String? senderNameSurname, String? receiverPhoneNumber, String? messageType, String? messageId, String? imageCaption, String? imageUrl, String? textBody, String? timestamp
+ int? id, DateTime? createdDate, DateTime? updatedDate, String? senderPhoneNumber, String? senderNameSurname, String? receiverPhoneNumber, String? messageType, String? messageId, String? imageCaption, String? imageUrl, String? textBody, bool? isConversation, String? timestamp
 });
 
 
@@ -272,7 +274,7 @@ class __$MessageModelCopyWithImpl<$Res>
 
 /// Create a copy of MessageModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? createdDate = freezed,Object? updatedDate = freezed,Object? senderPhoneNumber = freezed,Object? senderNameSurname = freezed,Object? receiverPhoneNumber = freezed,Object? messageType = freezed,Object? messageId = freezed,Object? imageCaption = freezed,Object? imageUrl = freezed,Object? textBody = freezed,Object? timestamp = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? createdDate = freezed,Object? updatedDate = freezed,Object? senderPhoneNumber = freezed,Object? senderNameSurname = freezed,Object? receiverPhoneNumber = freezed,Object? messageType = freezed,Object? messageId = freezed,Object? imageCaption = freezed,Object? imageUrl = freezed,Object? textBody = freezed,Object? isConversation = freezed,Object? timestamp = freezed,}) {
   return _then(_MessageModel(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,createdDate: freezed == createdDate ? _self.createdDate : createdDate // ignore: cast_nullable_to_non_nullable
@@ -285,7 +287,8 @@ as String?,messageId: freezed == messageId ? _self.messageId : messageId // igno
 as String?,imageCaption: freezed == imageCaption ? _self.imageCaption : imageCaption // ignore: cast_nullable_to_non_nullable
 as String?,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,textBody: freezed == textBody ? _self.textBody : textBody // ignore: cast_nullable_to_non_nullable
-as String?,timestamp: freezed == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
+as String?,isConversation: freezed == isConversation ? _self.isConversation : isConversation // ignore: cast_nullable_to_non_nullable
+as bool?,timestamp: freezed == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

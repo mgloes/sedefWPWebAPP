@@ -447,8 +447,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             child: const Text('İptal'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop();
+              await sharedPrefsClear("accessToken");
               context.go('/');
             },
             style: ElevatedButton.styleFrom(
@@ -725,7 +726,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             ),
             
             // Settings Button
-            Container(
+          ref.read(_mainViewModel.loggedUser).role != "ADMIN" ?Container() :  Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: Border(
@@ -1081,8 +1082,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       final reversedIndex = messages.length - 1 - index;
                       final message = messages[reversedIndex];
                       return ChatBubble(
-                        message: message, 
-                        isUser: message.senderPhoneNumber == selectedMainPhone,
+                        message: message,
+                        isUser: message.senderPhoneNumber == (selectedMainPhone == "Özel Mesajlar" ? "902163756781" : selectedMainPhone),
                         context: context,
                       );
                     },

@@ -165,6 +165,7 @@ class MainViewModel {
       ResponseModel res = await _mainService.getAllPhoneNumbers();
       if(res.isSuccess ?? false){
           ref.read(phoneNumbers.notifier).state = List<PhoneNumberModel>.from(res.data.map((e) => PhoneNumberModel.fromJson(e)).toList());
+          ref.read(phoneNumbers.notifier).state.insert(0, PhoneNumberModel(phoneNumber: "Özel Mesajlar",phoneNumberId: "835767242948963",status: true, title:"Sizin Konuşmalarınız",id: 1));
       }else{
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }
@@ -303,12 +304,46 @@ class MainViewModel {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bir hata oluştu")));
     }
   }
-  
-   Future<void> createCustomerService(WidgetRef ref,BuildContext context,String name, String surname) async {
+
+   Future<void> createCustomerService(WidgetRef ref,BuildContext context,String name, String surname, String email, String password) async {
     try {
-      ResponseModel res = await _mainService.createCustomerService(name, surname);
+      ResponseModel res = await _mainService.createCustomerService(name, surname, email, password);
       if(res.isSuccess ?? false){
           ref.read(users.notifier).state.add(res.data != null ? UserModel.fromJson(res.data) : UserModel());
+      }else{
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bir hata oluştu")));
+    }
+  }
+   Future<void> updateCustomerService(WidgetRef ref,BuildContext context,int userId,String name, String surname, String email, String password,bool status,String phoneNumberList) async {
+    try {
+      ResponseModel res = await _mainService.updateCustomerService(userId, name, surname, email, password,status, phoneNumberList);
+      if(res.isSuccess ?? false){
+          final currentUsers = ref.read(users);
+        final updatedUser = UserModel.fromJson(res.data);
+        final newUsers = currentUsers.map((user) {
+          if (user.id == userId) {
+            return updatedUser;
+          }
+          return user;
+        }).toList();
+        ref.read(users.notifier).state = newUsers;
+      }else{
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bir hata oluştu")));
+    }
+  }
+  Future<void> deleteCustomerService(WidgetRef ref,BuildContext context,int userId) async {
+    try {
+      ResponseModel res = await _mainService.deleteCustomerService(userId);
+      if(res.isSuccess ?? false){
+        final currentUsers = ref.read(users);
+        final newUsers = currentUsers.where((user) => user.id != userId).toList();
+        ref.read(users.notifier).state = newUsers;
       }else{
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }
@@ -326,6 +361,30 @@ class MainViewModel {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bir hata oluştu")));
+    }
+  }
+
+  Future<void> toggleUserStatus(WidgetRef ref, BuildContext context, int userId, bool currentStatus) async {
+    try {
+      // Kullanıcının mevcut verilerini al
+      final currentUsers = ref.read(users);
+      final user = currentUsers.firstWhere((u) => u.id == userId);
+      
+      // Status'u tersine çevir ve güncelle
+      await updateCustomerService(
+        ref, 
+        context, 
+        userId,
+        user.name ?? '',
+        user.surname ?? '',
+        user.emailAddress ?? '',
+        user.password ?? '',
+        !currentStatus, // Status'u tersine çevir
+        user.phoneNumberList ?? '',
+      );
+      
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Status güncellenirken hata oluştu")));
     }
   }
 

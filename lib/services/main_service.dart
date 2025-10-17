@@ -23,7 +23,7 @@ class MainService {
       Uri address = Uri.parse("$envPath/Auth/signIn");
       var response =
           await http.post(address, headers: getGeneralHeaders(), body: json.encode({
-        "username": username,
+        "emailAddress": username,
         "password": password
       }));
       debugPrint("${response.statusCode}");
@@ -130,7 +130,13 @@ class MainService {
   }
   Future<ResponseModel> GetMessage(String phoneNumber, String mainPhoneNumber) async {
     try {
-      Uri address = Uri.parse("$envPath/Message?phoneNumber=$phoneNumber&mainPhoneNumber=$mainPhoneNumber");
+      Uri address;
+      if(mainPhoneNumber == "Özel Mesajlar"){
+        address = Uri.parse("$envPath/Message?phoneNumber=$phoneNumber&mainPhoneNumber=$mainPhoneNumber&conversationId=0");
+      }else{
+        address = Uri.parse("$envPath/Message?phoneNumber=$phoneNumber&mainPhoneNumber=$mainPhoneNumber");
+      }
+      
       var response =
           await http.get(address, headers: getGeneralHeaders(isAuth: true));
       debugPrint("${response.statusCode}");
@@ -140,14 +146,48 @@ class MainService {
       return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
     }
   }
-    Future<ResponseModel> createCustomerService(String name, String surname) async {
+    Future<ResponseModel> createCustomerService(String name, String surname,String email,String password) async {
     try {
-      Uri address = Uri.parse("$envPath/User");
+      Uri address = Uri.parse("$envPath/User/createCustomerService");
       var response =
           await http.post(address, headers: getGeneralHeaders(isAuth: true), body: json.encode({
         "name": name,
-        "surname": surname
+        "surname": surname,
+        "emailAddress": email,
+        "password": password
       }));
+      debugPrint("${response.statusCode}");
+      debugPrint(response.body);
+      return ResponseModel.fromJson(json.decode(response.body)) ;
+    } catch (e) {
+      return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
+    }
+  }
+   Future<ResponseModel> updateCustomerService(int userId,String name, String surname,String email,String password,bool status, String phoneNumberList) async {
+    try {
+      Uri address = Uri.parse("$envPath/User");
+      var response =
+          await http.put(address, headers: getGeneralHeaders(isAuth: true), body: json.encode({
+        "id": userId,
+        "name": name,
+        "surname": surname,
+        "emailAddress": email,
+        "password": password,
+        "phoneNumberList": phoneNumberList,
+        "status": status,
+      }));
+      debugPrint("${response.statusCode}");
+      debugPrint(response.body);
+      return ResponseModel.fromJson(json.decode(response.body)) ;
+    } catch (e) {
+      return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
+    }
+  }
+  Future<ResponseModel> deleteCustomerService(int userId) async {
+    try {
+      Uri address = Uri.parse("$envPath/User?userId=$userId");
+      var response =
+          await http.delete(address, headers: getGeneralHeaders(isAuth: true));
       debugPrint("${response.statusCode}");
       debugPrint(response.body);
       return ResponseModel.fromJson(json.decode(response.body)) ;

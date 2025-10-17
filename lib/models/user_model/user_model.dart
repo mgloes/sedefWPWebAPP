@@ -8,11 +8,13 @@ abstract class UserModel with _$UserModel {
   int? id,
   DateTime? createdDate,
   DateTime? updatedDate,
-  String? username,
+  String? emailAddress,
   String? password,
   String? name,
   String? surname,
-  String? role
+  String? phoneNumberList,
+  String? role,
+  bool? status
   }) = _UserModel;
 
   const UserModel._();
