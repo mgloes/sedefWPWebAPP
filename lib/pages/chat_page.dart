@@ -219,7 +219,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     ref.read(_mainViewModel.messages.notifier).state.add(MessageModel(
       id: null,
-      senderPhoneNumber: selectedMainPhone,
+      senderPhoneNumber: selectedMainPhone == "Özel Mesajlar" ? "902163756781" : selectedMainPhone!,
       receiverPhoneNumber: selectedContactPhone,
       textBody: _messageController.text,
       messageType: "text",
@@ -465,6 +465,50 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   void _showSettings() {
     context.go('/settings');
+  }
+
+  void _showEndConversationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Görüşmeyi Bitir'),
+        content: const Text('Bu görüşmeyi sonlandırmak istediğinizden emin misiniz? Bu işlem geri alınamaz.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _endConversation();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Görüşmeyi Bitir'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _endConversation() async {
+    if (selectedContactPhone != null) {
+      await _mainViewModel.updateConversationStatus(
+        ref, 
+        context, 
+        selectedContactPhone!, 
+        false // Konuşma durumunu false (bitmiş) olarak ayarla
+      );
+      
+      // Başarılı olduğunda konuşma listesini yenile
+      selectedContactPhone = null;
+      selectedMainPhone = null;
+      selectedMainPhoneId = null;
+      await _mainViewModel.getAllMessages(ref, context);
+    }
   }
 
   @override
@@ -1055,6 +1099,23 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   },
                   icon: const Icon(Icons.refresh),
                   tooltip: 'Yenile',
+                ),
+                // Görüşmeyi Bitir Butonu
+                Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showEndConversationDialog(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    icon: const Icon(Icons.call_end, size: 18),
+                    label: const Text('Görüşmeyi Bitir'),
+                  ),
                 ),
               ],
             ),

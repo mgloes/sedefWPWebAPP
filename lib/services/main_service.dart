@@ -91,6 +91,19 @@ class MainService {
       return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
     }
   }
+   Future<ResponseModel> updateStatusConversation(
+      String phoneNumber, bool status) async {
+    try {
+      Uri address = Uri.parse("$envPath/Conversation/updateStatusConversation?phoneNumber=$phoneNumber&status=$status");
+      var response =
+          await http.put(address, headers: getGeneralHeaders(isAuth: true));
+      debugPrint("${response.statusCode}");
+      debugPrint(response.body);
+      return ResponseModel.fromJson(json.decode(response.body)) ;
+    } catch (e) {
+      return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
+    }
+  }
   Future<ResponseModel> deletePhoneNumber(
       int phoneNumberId) async {
     try {
@@ -146,7 +159,7 @@ class MainService {
       return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
     }
   }
-    Future<ResponseModel> createCustomerService(String name, String surname,String email,String password) async {
+    Future<ResponseModel> createCustomerService(String name, String surname,String email,String password, String description) async {
     try {
       Uri address = Uri.parse("$envPath/User/createCustomerService");
       var response =
@@ -154,7 +167,8 @@ class MainService {
         "name": name,
         "surname": surname,
         "emailAddress": email,
-        "password": password
+        "password": password,
+        "description": description
       }));
       debugPrint("${response.statusCode}");
       debugPrint(response.body);
@@ -163,7 +177,7 @@ class MainService {
       return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
     }
   }
-   Future<ResponseModel> updateCustomerService(int userId,String name, String surname,String email,String password,bool status, String phoneNumberList) async {
+   Future<ResponseModel> updateCustomerService(int userId,String name, String surname,String email,String password,bool status, String phoneNumberList, String description) async {
     try {
       Uri address = Uri.parse("$envPath/User");
       var response =
@@ -175,6 +189,7 @@ class MainService {
         "password": password,
         "phoneNumberList": phoneNumberList,
         "status": status,
+        "description": description,
       }));
       debugPrint("${response.statusCode}");
       debugPrint(response.body);
@@ -185,7 +200,7 @@ class MainService {
   }
   Future<ResponseModel> deleteCustomerService(int userId) async {
     try {
-      Uri address = Uri.parse("$envPath/User?userId=$userId");
+      Uri address = Uri.parse("$envPath/User?customerId=$userId");
       var response =
           await http.delete(address, headers: getGeneralHeaders(isAuth: true));
       debugPrint("${response.statusCode}");

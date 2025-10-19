@@ -14,7 +14,8 @@ abstract class UserModel with _$UserModel {
   String? surname,
   String? phoneNumberList,
   String? role,
-  bool? status
+  bool? status,
+  String? description
   }) = _UserModel;
 
   const UserModel._();

@@ -27,12 +27,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   final _newUserSurnameController = TextEditingController();
   final _newUserEmailController = TextEditingController();
   final _newUserPasswordController = TextEditingController();
+  final _newUserDescriptionController = TextEditingController();
   
   // Admin için user düzenleme controller'ları
   final _editUserNameController = TextEditingController();
   final _editUserSurnameController = TextEditingController();
   final _editUserEmailController = TextEditingController();
   final _editUserPasswordController = TextEditingController();
+  final _editUserDescriptionController = TextEditingController();
   
   final MainViewModel _mainViewModel = MainViewModel();
 
@@ -75,10 +77,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     _newUserSurnameController.dispose();
     _newUserEmailController.dispose();
     _newUserPasswordController.dispose();
+    _newUserDescriptionController.dispose();
     _editUserNameController.dispose();
     _editUserSurnameController.dispose();
     _editUserEmailController.dispose();
     _editUserPasswordController.dispose();
+    _editUserDescriptionController.dispose();
     
     super.dispose();
   }
@@ -256,12 +260,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _newUserSurnameController.text.trim(),
       _newUserEmailController.text.trim(),
       _newUserPasswordController.text.trim(),
+      _newUserDescriptionController.text.trim(),
     );
 
     _newUserNameController.clear();
     _newUserSurnameController.clear();
     _newUserEmailController.clear();
     _newUserPasswordController.clear();
+    _newUserDescriptionController.clear();
   }
 
   Future<void> _editUser(UserModel user) async {
@@ -269,6 +275,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     _editUserSurnameController.text = user.surname ?? '';
     _editUserEmailController.text = user.emailAddress ?? '';
     _editUserPasswordController.text = '';
+    _editUserDescriptionController.text = user.description ?? '';
     
     // Kullanıcının mevcut telefon numarası listesini al
     List<int> userPhoneNumberIds = [];
@@ -324,6 +331,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         border: OutlineInputBorder(),
                       ),
                       obscureText: true,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _editUserDescriptionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Açıklama',
+                        hintText: 'Kullanıcı hakkında açıklama',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.description),
+                      ),
+                      maxLines: 3,
                     ),
                     const SizedBox(height: 16),
                     
@@ -501,6 +519,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       user.password! : _editUserPasswordController.text.trim(),
                     userStatus, // userStatus değişkenini kullan
                     selectedPhoneNumberIds,
+                    _editUserDescriptionController.text.trim(), // Description ekle
                   );
                   
                   Navigator.of(context).pop();
@@ -1154,6 +1173,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
               obscureText: true,
             ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _newUserDescriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Açıklama',
+                hintText: 'Kullanıcı hakkında açıklama',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.description),
+              ),
+              maxLines: 3,
+            ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
@@ -1285,6 +1315,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                                       color: Colors.grey.shade500,
                                       fontSize: 12,
                                     ),
+                                  ),
+                                // Description göster
+                                if (user.description != null && user.description!.isNotEmpty)
+                                  Text(
+                                    user.description!,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                               ],
                             ),
