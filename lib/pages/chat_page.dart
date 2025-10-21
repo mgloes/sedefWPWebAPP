@@ -30,6 +30,7 @@ class ChatPage extends ConsumerStatefulWidget {
 class _ChatPageState extends ConsumerState<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _messageFocusNode = FocusNode();
   final MainViewModel _mainViewModel = MainViewModel();
   final AudioPlayer _audioPlayer = AudioPlayer();
   
@@ -157,6 +158,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _messageFocusNode.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -246,9 +248,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     // Şimdilik sadece mesajı temizliyoruz
     _messageController.clear();
     
-    // Mesaj gönderildikten sonra scroll et
+    // Mesaj gönderildikten sonra scroll et ve TextField'a focus ver
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToBottom();
+      _messageFocusNode.requestFocus();
     });
   }
 
@@ -823,6 +826,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       }
     }
     
+    // Mesajları son mesaj tarihine göre sırala (yeni mesajlar üstte)
+    filteredMessages.sort((a, b) {
+      final dateA = a.lastMessageDate ?? DateTime(1970);
+      final dateB = b.lastMessageDate ?? DateTime(1970);
+      return dateB.compareTo(dateA); // Descending order (yeni mesajlar üstte)
+    });
+    
     return Container(
       width: _isContactsPanelCollapsed ? 73 : 350,
       decoration: BoxDecoration(
@@ -889,32 +899,73 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   
                   return Container(
                     margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: IconButton(
-                      onPressed: () => _selectContact(
-                        message.phoneNumber ?? '', 
-                        selectedPhoneId ?? ''
-                      ),
-                      icon: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: isSelected ? secondaryColor.withOpacity(0.1) : null,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: CircleAvatar(
-                          backgroundColor: mainColor,
-                          radius: 16,
-                          child: Text(
-                            message.phoneNumberNameSurname?.substring(0, 1).toUpperCase() ?? '?',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                    child: Stack(
+                      children: [
+                        IconButton(
+                          onPressed: () => _selectContact(
+                            message.phoneNumber ?? '', 
+                            selectedPhoneId ?? ''
+                          ),
+                          icon: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: isSelected ? secondaryColor.withOpacity(0.1) : null,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: CircleAvatar(
+                              backgroundColor: mainColor,
+                              radius: 16,
+                              child: Text(
+                                message.phoneNumberNameSurname?.substring(0, 1).toUpperCase() ?? '?',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
                           ),
+                          tooltip: message.phoneNumberNameSurname ?? 'Bilinmeyen',
                         ),
-                      ),
-                      tooltip: message.phoneNumberNameSurname ?? 'Bilinmeyen',
+                        // Unread count badge
+                        Builder(
+                          builder: (context) {
+                            String key = "${selectedPhoneId}_${message.phoneNumber}";
+                            int unreadCount = unreadCounts[key] ?? 0;
+                            if (unreadCount > 0) {
+                              return Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 18,
+                                    minHeight: 18,
+                                  ),
+                                  child: Text(
+                                    unreadCount > 9 ? '9+' : unreadCount.toString(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -1193,6 +1244,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 Expanded(
                   child: TextField(
                     controller: _messageController,
+                    focusNode: _messageFocusNode,
                     decoration: InputDecoration(
                       hintText: 'Mesajınızı yazın...',
                       border: OutlineInputBorder(
@@ -2197,15 +2249,17 @@ class ChatBubble extends ConsumerWidget {
     // Saat formatı
     final hourMinute = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
     
-  {
+    if (isToday) {
+      // Bugün - sadece saat
+      return hourMinute;
+    } else {
       // Diğer günler - tarih + saat
       final day = time.day.toString().padLeft(2, '0');
       final month = time.month.toString().padLeft(2, '0');
       
       if (time.year == now.year) {
         // Bu yıl - gün/ay saat
-        final year = time.year.toString().substring(2);
-        return '$day/$month/$year $hourMinute';
+        return '$day/$month $hourMinute';
       } else {
         // Farklı yıl - gün/ay/yıl saat
         final year = time.year.toString().substring(2);
