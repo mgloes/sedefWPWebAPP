@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:html' as html;
 
 import 'package:audioplayers/audioplayers.dart';
@@ -44,6 +45,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   // Collapse durumları
   bool _isPhonePanelCollapsed = false;
   bool _isContactsPanelCollapsed = false;
+  
+  // İlk yükleme kontrolü
+  bool _isInitialLoad = true;
 
   @override
   void initState() {
@@ -62,7 +66,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             // Yeni mesaj geldiğinde ses çal (sadece alınan mesajlar için)
             final newMessage = next.last;
             if (newMessage.senderPhoneNumber != selectedMainPhone) {
-              if(!previous.isEmpty){
+              if(!previous.isEmpty && !_isInitialLoad){
                 _playMessageSound();
               }
             }
@@ -78,6 +82,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       ref.listenManual(
         _mainViewModel.allMessages,
         (previous, next) {
+          // İlk yükleme sırasında unread count hesaplama
+          if (_isInitialLoad) return;
+          
           if (previous != null && next.isNotEmpty) {
             // Yeni mesaj geldiğinde unread count'u güncelle
             for (var phoneData in next) {
@@ -114,7 +121,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     }
                     
                     if (isNewMessage) {
-                      if(!previous.isEmpty){
+                      if(!previous.isEmpty && !_isInitialLoad){
                         _playMessageSound();
                       }
                       setState(() {
@@ -139,6 +146,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
     await _mainViewModel.getMyUser(ref, context);
     await _mainViewModel.connectToSocket(ref, context);
+    
+    // İlk yükleme tamamlandı
+    setState(() {
+      _isInitialLoad = false;
+    });
   }
 
   @override
@@ -220,9 +232,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     ref.read(_mainViewModel.messages.notifier).state.add(MessageModel(
       id: null,
       senderPhoneNumber: selectedMainPhone == "Özel Mesajlar" ? "902163756781" : selectedMainPhone!,
+      senderNameSurname: (ref.read(_mainViewModel.loggedUser).name ?? "") + " " + (ref.read(_mainViewModel.loggedUser).surname ?? ""),
       receiverPhoneNumber: selectedContactPhone,
       textBody: _messageController.text,
       messageType: "text",
+      createdDate: DateTime.now(),
       timestamp: DateTime.now().toIso8601String(),
     ));
     setState(() {
@@ -937,6 +951,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       itemCount: filteredMessages.length,
                       itemBuilder: (context, index) {
                         final message = filteredMessages[index];
+                        inspect(message);
                         final isSelected = selectedContactPhone == message.phoneNumber;
                         
                         return Container(
@@ -1335,10 +1350,10 @@ class ChatBubble extends ConsumerWidget {
                   child: _buildMessageContent(),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  message.createdDate != null 
+                Text((message.senderNameSurname != null ? message.senderNameSurname! : "") + ' · ' +
+                  (message.createdDate != null 
                       ? _formatTime(message.createdDate!)
-                      : '',
+                      : ''),
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey.shade500,
@@ -2176,7 +2191,27 @@ class ChatBubble extends ConsumerWidget {
   }
 
   String _formatTime(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    final now = DateTime.now();
+    final isToday = time.day == now.day && time.month == now.month && time.year == now.year;
+    
+    // Saat formatı
+    final hourMinute = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    
+  {
+      // Diğer günler - tarih + saat
+      final day = time.day.toString().padLeft(2, '0');
+      final month = time.month.toString().padLeft(2, '0');
+      
+      if (time.year == now.year) {
+        // Bu yıl - gün/ay saat
+        final year = time.year.toString().substring(2);
+        return '$day/$month/$year $hourMinute';
+      } else {
+        // Farklı yıl - gün/ay/yıl saat
+        final year = time.year.toString().substring(2);
+        return '$day/$month/$year $hourMinute';
+      }
+    }
   }
 
 }
