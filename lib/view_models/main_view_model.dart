@@ -41,26 +41,29 @@ class MainViewModel {
     socket = await WebSocketChannel.connect(Uri.parse('wss://sedefwpapi.codeflight.com.tr/ws?token='+loggedUserToken));
       socket.stream.listen((data) {
         print(data);
+        MessageModel message;
         try {
-      MessageModel message = MessageModel.fromJson(jsonDecode(data));
+          
+            message = MessageModel.fromJson(jsonDecode(data));
+          inspect(message); // --- IGNORE ---
+       
       if(ref.read(messages).where((e) => e.senderPhoneNumber == message.senderPhoneNumber).isNotEmpty){
         ref.read(messages.notifier).state = [...ref.read(messages), message];
-      }else{
-        final allMessagesList = ref.read(allMessages);
-        final index = allMessagesList.indexWhere((element) => element.phoneNumber == (message.isConversation == true ?  message.receiverPhoneNumber == "902163756781" ?  "Özel Mesajlar"  : message.receiverPhoneNumber : message.receiverPhoneNumber));
+      }
 
-        if (index != -1) {
-          // Mevcut phoneNumber için mesaj listesine ekle veya güncelle
-          
-          final currentMessages = List<GetAllMessageModel>.from(allMessagesList[index].messages as List<GetAllMessageModel>);
-          final messageIndex = currentMessages.indexWhere((msg) => msg.phoneNumber == message.senderPhoneNumber);
+        final allMessagesList = ref.read(allMessages);
+        // final index =  allMessagesList.indexWhere((element) => element.phoneNumber == (message.isConversation == true ?  message.receiverPhoneNumber == "902163756781" ?  "Özel Mesajlar"  : message.receiverPhoneNumber : message.receiverPhoneNumber));
+        inspect(allMessagesList);
+        allMessagesList.forEach((element) {
+                final currentMessages = List<GetAllMessageModel>.from(element.messages as List<GetAllMessageModel>);
+          final messageIndex = currentMessages.indexWhere((msg) => msg.phoneNumber == (message.senderPhoneNumber == "902163756781" ? message.receiverPhoneNumber : message.senderPhoneNumber));
           
           if (messageIndex != -1) {
             // Mevcut mesajı güncelle
             currentMessages[messageIndex] = GetAllMessageModel(
               lastMessage: message.textBody ?? "",
               lastMessageDate: message.createdDate ?? DateTime.now(),
-              phoneNumber: message.senderPhoneNumber ?? "",
+              phoneNumber: (message.senderPhoneNumber == "902163756781" ? message.receiverPhoneNumber : message.senderPhoneNumber) ?? "",
               phoneNumberNameSurname: message.senderNameSurname ?? "",
             );
           } else {
@@ -68,33 +71,43 @@ class MainViewModel {
             currentMessages.add(GetAllMessageModel(
               lastMessage: message.textBody ?? "",
               lastMessageDate: message.createdDate ?? DateTime.now(),
-              phoneNumber: message.senderPhoneNumber ?? "",
+              phoneNumber: (message.senderPhoneNumber == "902163756781" ? message.receiverPhoneNumber : message.senderPhoneNumber) ?? "",
               phoneNumberNameSurname: message.senderNameSurname ?? "",
             ));
           }
 
-          final updatedAllMessages = List<GetAllMessageForMainPhonesModel>.from(allMessagesList);
-          updatedAllMessages[index] = allMessagesList[index].copyWith(messages: currentMessages);
+          final updatedAllMessages = List<GetAllMessageForMainPhonesModel>.from(ref.read(allMessages));
+          var index = updatedAllMessages.indexWhere((e) => e.phoneNumber == element.phoneNumber);
+          updatedAllMessages[index] = updatedAllMessages[index].copyWith(messages: currentMessages);
 
           ref.read(allMessages.notifier).state = updatedAllMessages;
-        } else {
-          // Yeni phoneNumber için yeni bir kayıt oluştur
-          ref.read(allMessages.notifier).state = [
-            ...allMessagesList,
-            GetAllMessageForMainPhonesModel(
-              phoneNumber: message.receiverPhoneNumber ?? "",
-              messages: [
-                GetAllMessageModel(
-                  lastMessage: message.textBody ?? "",
-                  lastMessageDate: message.createdDate ?? DateTime.now(),
-                  phoneNumber: message.senderPhoneNumber ?? "",
-                  phoneNumberNameSurname: message.senderNameSurname ?? "",
-                )
-              ],
-            ),
-          ];
-        }
-      }
+  
+        },);
+
+
+
+        
+        // if (index != -1) {
+        //   // Mevcut phoneNumber için mesaj listesine ekle veya güncelle
+          
+      
+        // } else {
+        //   // Yeni phoneNumber için yeni bir kayıt oluştur
+        //   ref.read(allMessages.notifier).state = [
+        //     ...allMessagesList,
+        //     GetAllMessageForMainPhonesModel(
+        //       phoneNumber: message.receiverPhoneNumber ?? "",
+        //       messages: [
+        //         GetAllMessageModel(
+        //           lastMessage: message.textBody ?? "",
+        //           lastMessageDate: message.createdDate ?? DateTime.now(),
+        //           phoneNumber: message.senderPhoneNumber ?? "",
+        //           phoneNumberNameSurname: message.senderNameSurname ?? "",
+        //         )
+        //       ],
+        //     ),
+        //   ];
+        // }
 
        } catch (e) {
          print(e);
@@ -164,7 +177,7 @@ class MainViewModel {
       ResponseModel res = await _mainService.getAllPhoneNumbers();
       if(res.isSuccess ?? false){
           ref.read(phoneNumbers.notifier).state = List<PhoneNumberModel>.from(res.data.map((e) => PhoneNumberModel.fromJson(e)).toList());
-          ref.read(phoneNumbers.notifier).state.insert(0, PhoneNumberModel(phoneNumber: "Özel Mesajlar",phoneNumberId: "835767242948963",status: true, title:"Sizin Konuşmalarınız",id: 1));
+          ref.read(loggedUser).role == "ADMIN" ? null : ref.read(phoneNumbers.notifier).state.insert(0, PhoneNumberModel(phoneNumber: "Özel Mesajlar",phoneNumberId: "835767242948963",status: true, title:"Sizin Konuşmalarınız",id: 1));
       }else{
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }
@@ -300,7 +313,6 @@ class MainViewModel {
       ResponseModel res = await _mainService.GetAllMessages();
       if(res.isSuccess ?? false){
           ref.read(allMessages.notifier).state = List<GetAllMessageForMainPhonesModel>.from(res.data.map((e) => GetAllMessageForMainPhonesModel.fromJson(e)).toList());
-          inspect(ref.read(allMessages.notifier).state);
       }else{
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }

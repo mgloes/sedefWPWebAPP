@@ -231,16 +231,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 }
     ));
 
-    ref.read(_mainViewModel.messages.notifier).state.add(MessageModel(
-      id: null,
-      senderPhoneNumber: selectedMainPhone == "Özel Mesajlar" ? "902163756781" : selectedMainPhone!,
-      senderNameSurname: (ref.read(_mainViewModel.loggedUser).name ?? "") + " " + (ref.read(_mainViewModel.loggedUser).surname ?? ""),
-      receiverPhoneNumber: selectedContactPhone,
-      textBody: _messageController.text,
-      messageType: "text",
-      createdDate: DateTime.now(),
-      timestamp: DateTime.now().toIso8601String(),
-    ));
+    // ref.read(_mainViewModel.messages.notifier).state.add(MessageModel(
+    //   id: null,
+    //   senderPhoneNumber: selectedMainPhone == "Özel Mesajlar" ? "902163756781" : selectedMainPhone!,
+    //   senderNameSurname: (ref.read(_mainViewModel.loggedUser).name ?? "") + " " + (ref.read(_mainViewModel.loggedUser).surname ?? ""),
+    //   receiverPhoneNumber: selectedContactPhone,
+    //   textBody: _messageController.text,
+    //   messageType: "text",
+    //   createdDate: DateTime.now(),
+    //   timestamp: DateTime.now().toIso8601String(),
+    // ));
     setState(() {
       
     });
@@ -1002,7 +1002,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       itemCount: filteredMessages.length,
                       itemBuilder: (context, index) {
                         final message = filteredMessages[index];
-                        inspect(message);
                         final isSelected = selectedContactPhone == message.phoneNumber;
                         
                         return Container(
@@ -1138,19 +1137,27 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        (ref.read(_mainViewModel.allMessages).where((e) => e.phoneNumber == selectedMainPhone).first.messages!.where((e) => e.phoneNumber == selectedContactPhone).first.phoneNumberNameSurname   ?? 'Konuşma') + ' ($selectedContactPhone)',
+                        (ref.read(_mainViewModel.allMessages).where((e) => e.phoneNumber == selectedMainPhone).first.messages!.where((e) => e.phoneNumber == selectedContactPhone).first.phoneNumberNameSurname   ?? 'Konuşma') + ' ($selectedContactPhone)' ,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
-                      Text(
-                        '${messages.length} mesaj',
+                    ref.read(_mainViewModel.allMessages).where((e) => e.phoneNumber == selectedMainPhone).first.messages!.where((e) => e.phoneNumber == selectedContactPhone).first.converisationStatus == true ?  Text(
+                        " Atanan Kişi: " + (ref.read(_mainViewModel.allMessages).where((e) => e.phoneNumber == selectedMainPhone).first.messages!.where((e) => e.phoneNumber == selectedContactPhone).first.assignedUserInfo ?? 'Atanmamış' ) ,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,
                         ),
-                      ),
+                      ) : Container(),
+                      ref.read(_mainViewModel.allMessages).where((e) => e.phoneNumber == selectedMainPhone).first.messages!.where((e) => e.phoneNumber == selectedContactPhone).first.converisationStatus == true ? Text(
+                        " Geçen Süre: " + (detailedFormatTime(ref.read(_mainViewModel.allMessages).where((e) => e.phoneNumber == selectedMainPhone).first.messages!.where((e) => e.phoneNumber == selectedContactPhone).first.assignedDate ?? DateTime.now())) ,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ) : Container(),
+                     
                     ],
                   ),
                 ),
@@ -1167,7 +1174,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   tooltip: 'Yenile',
                 ),
                 // Görüşmeyi Bitir Butonu
-                Container(
+               ref.read(_mainViewModel.allMessages).where((e) => e.phoneNumber == selectedMainPhone).first.messages!.where((e) => e.phoneNumber == selectedContactPhone).first.converisationStatus == true ? Container(
                   margin: const EdgeInsets.only(left: 8),
                   child: ElevatedButton.icon(
                     onPressed: () => _showEndConversationDialog(),
@@ -1182,7 +1189,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     icon: const Icon(Icons.call_end, size: 18),
                     label: const Text('Görüşmeyi Bitir'),
                   ),
-                ),
+                ): Container(),
               ],
             ),
           ),
@@ -1336,6 +1343,51 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       return '${difference.inMinutes}dk';
     } else {
       return 'şimdi';
+    }
+  }
+  String detailedFormatTime(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+    
+    List<String> parts = [];
+    
+    // Gün hesaplama
+    if (difference.inDays > 0) {
+      parts.add('${difference.inDays} gün');
+    }
+    
+    // Saat hesaplama (günler çıkarıldıktan sonra kalan saatler)
+    final remainingHours = difference.inHours % 24;
+    if (remainingHours > 0) {
+      parts.add('$remainingHours saat');
+    }
+    
+    // Dakika hesaplama (saatler çıkarıldıktan sonra kalan dakikalar)
+    final remainingMinutes = difference.inMinutes % 60;
+    if (remainingMinutes > 0) {
+      parts.add('$remainingMinutes dakika');
+    }
+    
+    // Saniye hesaplama (dakikalar çıkarıldıktan sonra kalan saniyeler)
+    final remainingSeconds = difference.inSeconds % 60;
+    if (parts.isEmpty && remainingSeconds >= 0) {
+      if (remainingSeconds < 30) {
+        return 'şimdi';
+      } else {
+        parts.add('$remainingSeconds saniye');
+      }
+    }
+    
+    // Sonucu birleştir
+    if (parts.isEmpty) {
+      return 'şimdi';
+    } else if (parts.length == 1) {
+      return parts[0];
+    } else if (parts.length == 2) {
+      return '${parts[0]} ${parts[1]}';
+    } else {
+      // 3 veya daha fazla parça varsa ilk ikisini göster
+      return '${parts[0]} ${parts[1]}';
     }
   }
 }

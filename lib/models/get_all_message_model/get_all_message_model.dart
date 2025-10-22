@@ -8,7 +8,10 @@ abstract class GetAllMessageModel with _$GetAllMessageModel {
   String? lastMessage,
   DateTime? lastMessageDate,
   String? phoneNumber,
-  String? phoneNumberNameSurname
+  String? phoneNumberNameSurname,
+  String? assignedUserInfo,
+  DateTime? assignedDate,
+  bool? converisationStatus
 
   }) = _GetAllMessageModel;
 

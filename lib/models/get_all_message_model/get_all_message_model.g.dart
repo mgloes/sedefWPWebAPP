@@ -14,6 +14,11 @@ _GetAllMessageModel _$GetAllMessageModelFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['lastMessageDate'] as String),
       phoneNumber: json['phoneNumber'] as String?,
       phoneNumberNameSurname: json['phoneNumberNameSurname'] as String?,
+      assignedUserInfo: json['assignedUserInfo'] as String?,
+      assignedDate: json['assignedDate'] == null
+          ? null
+          : DateTime.parse(json['assignedDate'] as String),
+      converisationStatus: json['converisationStatus'] as bool?,
     );
 
 Map<String, dynamic> _$GetAllMessageModelToJson(_GetAllMessageModel instance) =>
@@ -22,4 +27,7 @@ Map<String, dynamic> _$GetAllMessageModelToJson(_GetAllMessageModel instance) =>
       'lastMessageDate': instance.lastMessageDate?.toIso8601String(),
       'phoneNumber': instance.phoneNumber,
       'phoneNumberNameSurname': instance.phoneNumberNameSurname,
+      'assignedUserInfo': instance.assignedUserInfo,
+      'assignedDate': instance.assignedDate?.toIso8601String(),
+      'converisationStatus': instance.converisationStatus,
     };
