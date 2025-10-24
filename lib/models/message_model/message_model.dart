@@ -11,6 +11,7 @@ abstract class MessageModel with _$MessageModel {
   String? senderPhoneNumber,
   String? senderNameSurname,
   String? receiverPhoneNumber,
+  String? receiverNameSurname,
   String? messageType,
   String? messageId,
   String? imageCaption,

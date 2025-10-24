@@ -47,40 +47,43 @@ class MainViewModel {
             message = MessageModel.fromJson(jsonDecode(data));
           inspect(message); // --- IGNORE ---
        
-      if(ref.read(messages).where((e) => e.senderPhoneNumber == message.senderPhoneNumber).isNotEmpty){
+      if(ref.read(messages).where((e) => e.senderPhoneNumber == message.senderPhoneNumber || e.senderPhoneNumber == message.receiverPhoneNumber).isNotEmpty && message.messageType != "interactive"){
         ref.read(messages.notifier).state = [...ref.read(messages), message];
       }
 
         final allMessagesList = ref.read(allMessages);
         // final index =  allMessagesList.indexWhere((element) => element.phoneNumber == (message.isConversation == true ?  message.receiverPhoneNumber == "902163756781" ?  "Özel Mesajlar"  : message.receiverPhoneNumber : message.receiverPhoneNumber));
         inspect(allMessagesList);
-        allMessagesList.forEach((element) {
+        allMessagesList.forEach((element) async {
                 final currentMessages = List<GetAllMessageModel>.from(element.messages as List<GetAllMessageModel>);
           final messageIndex = currentMessages.indexWhere((msg) => msg.phoneNumber == (message.senderPhoneNumber == "902163756781" ? message.receiverPhoneNumber : message.senderPhoneNumber));
           
           if (messageIndex != -1) {
             // Mevcut mesajı güncelle
-            currentMessages[messageIndex] = GetAllMessageModel(
+            currentMessages[messageIndex] = currentMessages[messageIndex].copyWith(
               lastMessage: message.textBody ?? "",
               lastMessageDate: message.createdDate ?? DateTime.now(),
               phoneNumber: (message.senderPhoneNumber == "902163756781" ? message.receiverPhoneNumber : message.senderPhoneNumber) ?? "",
-              phoneNumberNameSurname: message.senderNameSurname ?? "",
+              phoneNumberNameSurname: message.senderPhoneNumber == "902163756781" ?message.receiverNameSurname ?? "" : message.senderNameSurname ?? "" ,
             );
-          } else {
-            // Yeni mesaj ekle
-            currentMessages.add(GetAllMessageModel(
-              lastMessage: message.textBody ?? "",
-              lastMessageDate: message.createdDate ?? DateTime.now(),
-              phoneNumber: (message.senderPhoneNumber == "902163756781" ? message.receiverPhoneNumber : message.senderPhoneNumber) ?? "",
-              phoneNumberNameSurname: message.senderNameSurname ?? "",
-            ));
-          }
 
           final updatedAllMessages = List<GetAllMessageForMainPhonesModel>.from(ref.read(allMessages));
           var index = updatedAllMessages.indexWhere((e) => e.phoneNumber == element.phoneNumber);
           updatedAllMessages[index] = updatedAllMessages[index].copyWith(messages: currentMessages);
-
           ref.read(allMessages.notifier).state = updatedAllMessages;
+
+          } else {
+            await getAllMessages(ref, context);
+            // Yeni mesaj ekle
+            // currentMessages.add(GetAllMessageModel(
+            //   lastMessage: message.textBody ?? "",
+            //   lastMessageDate: message.createdDate ?? DateTime.now(),
+            //   phoneNumber: (message.senderPhoneNumber == "902163756781" ? message.receiverPhoneNumber : message.senderPhoneNumber) ?? "",
+            //   phoneNumberNameSurname: message.senderPhoneNumber == "902163756781" ?message.receiverNameSurname ?? "" : message.senderNameSurname ?? "" ,
+            // ));
+          }
+
+          
   
         },);
 
