@@ -59,6 +59,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final loggedUser = ref.read(_mainViewModel.loggedUser);
     if (loggedUser.role == 'ADMIN') {
       await _mainViewModel.getListUser(ref, context);
+      await _mainViewModel.getSettings(ref, context);
     }else{
         context.go('/chat');
     }
@@ -1010,7 +1011,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ],
           ),
           child: DefaultTabController(
-            length: 2,
+            length: 3,
             child: Column(
               children: [
                 TabBar(
@@ -1035,6 +1036,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         ],
                       ),
                     ),
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.settings_applications),
+                          SizedBox(width: 8),
+                          Text('Sistem Ayarları'),
+                        ],
+                      ),
+                    ),
                   ],
                   labelColor: secondaryColor,
                   unselectedLabelColor: Colors.grey,
@@ -1048,6 +1059,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       _buildUserManagementTab(users, phoneNumbers),
                       // Hat Yönetimi Tab
                       _buildPhoneManagementTab(loggedUser, phoneNumbers),
+                      // Sistem Ayarları Tab
+                      _buildSystemSettingsTab(),
                     ],
                   ),
                 ),
@@ -1369,6 +1382,227 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     ),
                   );
                 },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Sistem Ayarları Tab'ı
+  Widget _buildSystemSettingsTab() {
+    final appSettings = ref.watch(_mainViewModel.settings);
+    
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(Icons.settings_applications, color: secondaryColor, size: 28),
+              const SizedBox(width: 12),
+              const Text(
+                'Sistem Ayarları',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Sistem genelindeki ayarları yapılandırın',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 32),
+          
+          // Müşteri Hizmetleri Ayarı
+          Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: secondaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.support_agent,
+                          color: secondaryColor,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Birden Fazla Müşteri Hizmetleri',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Müşteriler birden fazla müşteri hizmetleri temsilcisi seçebilir',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        children: [
+                          Switch(
+                            value: appSettings.customerSelection ?? false,
+                            onChanged: (bool value) async {
+                              await _mainViewModel.updateSettings(ref, context, value);
+                            },
+                            activeColor: secondaryColor,
+                          ),
+                          Text(
+                            appSettings.customerSelection ?? false ? 'Aktif' : 'Pasif',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: appSettings.customerSelection ?? false 
+                                  ? Colors.green.shade600 
+                                  : Colors.grey.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue.shade600,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            appSettings.customerSelection == true
+                                ? 'Bu ayar aktif olduğunda, müşteriler konuşma sırasında birden fazla müşteri hizmetleri temsilcisi seçebilir.'
+                                : 'Bu ayar pasif olduğunda, müşteriler sadece tek bir müşteri hizmetleri temsilcisi ile konuşabilir.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // İstatistikler
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatisticCard(
+                  'Aktif Kullanıcılar',
+                  ref.watch(_mainViewModel.users).where((u) => u.status == true).length.toString(),
+                  Icons.person_outline,
+                  Colors.green,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildStatisticCard(
+                  'Toplam Hatlar',
+                  ref.watch(_mainViewModel.phoneNumbers).length.toString(),
+                  Icons.phone,
+                  Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildStatisticCard(
+                  'Aktif Hatlar',
+                  ref.watch(_mainViewModel.phoneNumbers).where((p) => p.status == true).length.toString(),
+                  Icons.phone_enabled,
+                  Colors.orange,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatisticCard(String title, String value, IconData icon, Color color) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

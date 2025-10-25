@@ -19,6 +19,11 @@ _GetAllMessageModel _$GetAllMessageModelFromJson(Map<String, dynamic> json) =>
           ? null
           : DateTime.parse(json['assignedDate'] as String),
       converisationStatus: json['converisationStatus'] as bool?,
+      conversation: json['conversation'] == null
+          ? null
+          : ConversationModel.fromJson(
+              json['conversation'] as Map<String, dynamic>,
+            ),
     );
 
 Map<String, dynamic> _$GetAllMessageModelToJson(_GetAllMessageModel instance) =>
@@ -30,4 +35,5 @@ Map<String, dynamic> _$GetAllMessageModelToJson(_GetAllMessageModel instance) =>
       'assignedUserInfo': instance.assignedUserInfo,
       'assignedDate': instance.assignedDate?.toIso8601String(),
       'converisationStatus': instance.converisationStatus,
+      'conversation': instance.conversation,
     };

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sedefwpwebapp/pages/conversations_page.dart';
 import '../pages/login_page.dart';
 import '../pages/chat_page.dart';
 import '../pages/settings_page.dart';
@@ -21,6 +22,11 @@ final GoRouter appRouter = GoRouter(
       path: '/settings',
       name: 'settings',
       builder: (context, state) => const SettingsPage(),
+    ),
+    GoRoute(
+      path: '/conversations',
+      name: 'conversations',
+      builder: (context, state) => const ConversationsPage(),
     ),
   ],
 );

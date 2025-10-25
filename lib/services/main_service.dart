@@ -104,6 +104,52 @@ class MainService {
       return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
     }
   }
+  
+   Future<ResponseModel> updateConversation(int conversationId,
+       bool status) async {
+    try {
+      Uri address = Uri.parse("$envPath/Conversation");
+      var response =
+          await http.put(address, headers: getGeneralHeaders(isAuth: true), body: json.encode({
+        "id": conversationId,
+        "conversationEndDate": DateTime.now().toIso8601String(),
+        "status": status,
+      }));
+      debugPrint("${response.statusCode}");
+      debugPrint(response.body);
+      return ResponseModel.fromJson(json.decode(response.body)) ;
+    } catch (e) {
+      return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
+    }
+  }
+
+   Future<ResponseModel> getSettings() async {
+    try {
+      Uri address = Uri.parse("$envPath/Settings");
+      var response =
+          await http.get(address, headers: getGeneralHeaders(isAuth: true));
+      debugPrint("${response.statusCode}");
+      debugPrint(response.body);
+      return ResponseModel.fromJson(json.decode(response.body)) ;
+    } catch (e) {
+      return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
+    }
+  }
+    Future<ResponseModel> updateSettings(bool status) async {
+    try {
+      Uri address = Uri.parse("$envPath/Settings");
+      var response =
+          await http.put(address, headers: getGeneralHeaders(isAuth: true), body: json.encode({
+       "id" : 1,
+        "customerSelection": status,
+      }));
+      debugPrint("${response.statusCode}");
+      debugPrint(response.body);
+      return ResponseModel.fromJson(json.decode(response.body)) ;
+    } catch (e) {
+      return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
+    }
+  }
   Future<ResponseModel> deletePhoneNumber(
       int phoneNumberId) async {
     try {
@@ -213,6 +259,18 @@ class MainService {
    Future<ResponseModel> getListUser() async {
     try {
       Uri address = Uri.parse("$envPath/User/GetAllUsers");
+      var response =
+          await http.get(address, headers: getGeneralHeaders(isAuth: true));
+      debugPrint("${response.statusCode}");
+      debugPrint(response.body);
+      return ResponseModel.fromJson(json.decode(response.body)) ;
+    } catch (e) {
+      return ResponseModel(isSuccess: false,message: "Bir hata oluştu: $e");
+    }
+  }
+     Future<ResponseModel> getListConversations() async {
+    try {
+      Uri address = Uri.parse("$envPath/Conversation/getListConversation");
       var response =
           await http.get(address, headers: getGeneralHeaders(isAuth: true));
       debugPrint("${response.statusCode}");

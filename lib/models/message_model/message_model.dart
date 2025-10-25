@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:sedefwpwebapp/models/conversation_model/conversation_model.dart';
 part 'message_model.freezed.dart';
 part 'message_model.g.dart';
 
@@ -18,7 +19,8 @@ abstract class MessageModel with _$MessageModel {
   String? imageUrl,
   String? textBody,
   bool? isConversation,
-  String? timestamp
+  String? timestamp,
+  ConversationModel? conversation
 
   }) = _MessageModel;
 

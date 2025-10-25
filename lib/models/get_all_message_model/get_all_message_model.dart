@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:sedefwpwebapp/models/conversation_model/conversation_model.dart';
 part 'get_all_message_model.freezed.dart';
 part 'get_all_message_model.g.dart';
 
@@ -11,7 +12,8 @@ abstract class GetAllMessageModel with _$GetAllMessageModel {
   String? phoneNumberNameSurname,
   String? assignedUserInfo,
   DateTime? assignedDate,
-  bool? converisationStatus
+  bool? converisationStatus,
+  ConversationModel? conversation
 
   }) = _GetAllMessageModel;
 

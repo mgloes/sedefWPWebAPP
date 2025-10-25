@@ -41,7 +41,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   
   // Okunmamış mesaj sayılarını takip etmek için
   // Key: "mainPhone_contactPhone" formatında
-  Map<String, int> unreadCounts = {};
+  // Map<String, int> unreadCounts = {};
   
   // Collapse durumları
   bool _isPhonePanelCollapsed = false;
@@ -80,62 +80,62 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       );
       
       // AllMessages listesini dinle ve yeni mesaj geldiğinde unread count artır
-      ref.listenManual(
-        _mainViewModel.allMessages,
-        (previous, next) {
-          // İlk yükleme sırasında unread count hesaplama
-          if (_isInitialLoad) return;
+      // ref.listenManual(
+      //   _mainViewModel.allMessages,
+      //   (previous, next) {
+      //     // İlk yükleme sırasında unread count hesaplama
+      //     if (_isInitialLoad) return;
           
-          if (previous != null && next.isNotEmpty) {
-            // Yeni mesaj geldiğinde unread count'u güncelle
-            for (var phoneData in next) {
-              if (phoneData.messages != null) {
-                for (var message in phoneData.messages!) {
-                  String key = "${phoneData.phoneNumber}_${message.phoneNumber}";
+      //     if (previous != null && next.isNotEmpty) {
+      //       // Yeni mesaj geldiğinde unread count'u güncelle
+      //       for (var phoneData in next) {
+      //         if (phoneData.messages != null) {
+      //           for (var message in phoneData.messages!) {
+      //             String key = "${phoneData.phoneNumber}_${message.phoneNumber}";
                   
-                  // Eğer bu konuşma şu anda açık değilse unread count artır
-                  if (selectedMainPhone != phoneData.phoneNumber || 
-                      selectedContactPhone != message.phoneNumber) {
+      //             // Eğer bu konuşma şu anda açık değilse unread count artır
+      //             if (selectedMainPhone != phoneData.phoneNumber || 
+      //                 selectedContactPhone != message.phoneNumber) {
                     
-                    // Önceki listede bu mesaj var mı kontrol et
-                    bool isNewMessage = true;
-                    if (previous.isNotEmpty) {
-                      var previousPhoneData = previous.firstWhere(
-                        (p) => p.phoneNumber == phoneData.phoneNumber, 
-                        orElse: () => GetAllMessageForMainPhonesModel(phoneNumber: '', messages: [])
-                      );
+      //               // Önceki listede bu mesaj var mı kontrol et
+      //               bool isNewMessage = true;
+      //               if (previous.isNotEmpty) {
+      //                 var previousPhoneData = previous.firstWhere(
+      //                   (p) => p.phoneNumber == phoneData.phoneNumber, 
+      //                   orElse: () => GetAllMessageForMainPhonesModel(phoneNumber: '', messages: [])
+      //                 );
                       
-                      if (previousPhoneData.phoneNumber?.isNotEmpty == true && 
-                          previousPhoneData.messages != null) {
-                        var previousMessage = previousPhoneData.messages!.firstWhere(
-                          (m) => m.phoneNumber == message.phoneNumber,
-                          orElse: () => GetAllMessageModel(phoneNumber: '', lastMessage: '', lastMessageDate: DateTime.now())
-                        );
+      //                 if (previousPhoneData.phoneNumber?.isNotEmpty == true && 
+      //                     previousPhoneData.messages != null) {
+      //                   var previousMessage = previousPhoneData.messages!.firstWhere(
+      //                     (m) => m.phoneNumber == message.phoneNumber,
+      //                     orElse: () => GetAllMessageModel(phoneNumber: '', lastMessage: '', lastMessageDate: DateTime.now())
+      //                   );
                         
-                        // Aynı mesaj varsa ve tarih aynıysa yeni değil
-                        if (previousMessage.phoneNumber?.isNotEmpty == true &&
-                            previousMessage.lastMessage == message.lastMessage &&
-                            previousMessage.lastMessageDate == message.lastMessageDate) {
-                          isNewMessage = false;
-                        }
-                      }
-                    }
+      //                   // Aynı mesaj varsa ve tarih aynıysa yeni değil
+      //                   if (previousMessage.phoneNumber?.isNotEmpty == true &&
+      //                       previousMessage.lastMessage == message.lastMessage &&
+      //                       previousMessage.lastMessageDate == message.lastMessageDate) {
+      //                     isNewMessage = false;
+      //                   }
+      //                 }
+      //               }
                     
-                    if (isNewMessage) {
-                      if(!previous.isEmpty && !_isInitialLoad){
-                        _playMessageSound();
-                      }
-                      setState(() {
-                        unreadCounts[key] = (unreadCounts[key] ?? 0) + 1;
-                      });
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-      );
+      //               if (isNewMessage) {
+      //                 if(!previous.isEmpty && !_isInitialLoad){
+      //                   _playMessageSound();
+      //                 }
+      //                 setState(() {
+      //                   unreadCounts[key] = (unreadCounts[key] ?? 0) + 1;
+      //                 });
+      //               }
+      //             }
+      //           }
+      //         }
+      //       }
+      //     }
+      //   },
+      // );
     });
   }
 
@@ -201,10 +201,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     setState(() {
       selectedContactPhone = contactPhone;
       selectedMainPhone = mainPhone;
-      
-      // Bu kontak seçildiğinde unread count'u sıfırla
-      String key = "${mainPhone}_${contactPhone}";
-      unreadCounts[key] = 0;
     });
     
     // Seçilen kontak için mesajları yükle
@@ -483,6 +479,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void _showSettings() {
     context.go('/settings');
   }
+    void _showConversation() {
+    context.go('/conversations');
+  }
 
   void _showEndConversationDialog() {
     showDialog(
@@ -749,12 +748,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                                 // Bu telefon hattı için toplam unread count hesapla
                                 int totalUnread = 0;
                                 String phoneKey = phone.phoneNumber ?? '';
-                                
-                                unreadCounts.forEach((key, value) {
-                                  if (key.startsWith('${phoneKey}_')) {
-                                    totalUnread += value;
+                                try {
+                                  final phoneMessages = ref.watch(_mainViewModel.allMessages).where((e) => e.phoneNumber == phoneKey);
+                                  if (phoneMessages.isNotEmpty && phoneMessages.first.messages != null) {
+                                    // Cevaplanmamış mesajı olan müşteri sayısını say (mesaj sayısını değil)
+                                    totalUnread = phoneMessages.first.messages!
+                                        .where((e) => e.conversation != null && (e.conversation!.notAnsweredMessageCount ?? 0) > 0)
+                                        .length; // .length kullanarak kaç tane müşteri olduğunu sayıyoruz
                                   }
-                                });
+                                } catch (e) {
+                                  totalUnread = 0;
+                                }
                                 
                                 if (totalUnread > 0) {
                                   return Container(
@@ -787,6 +791,28 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             ),
             
             // Settings Button
+            ref.read(_mainViewModel.loggedUser).role != "ADMIN" ?Container() :  Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Colors.white.withOpacity(0.2)),
+                ),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _showConversation,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: secondaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  icon: const Icon(Icons.send_time_extension_outlined),
+                  label: const Text('Atamalar'),
+                ),
+              ),
+            ),
+
           ref.read(_mainViewModel.loggedUser).role != "ADMIN" ?Container() :  Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -931,8 +957,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                         // Unread count badge
                         Builder(
                           builder: (context) {
-                            String key = "${selectedPhoneId}_${message.phoneNumber}";
-                            int unreadCount = unreadCounts[key] ?? 0;
+                            // String key = "${selectedPhoneId}_${message.phoneNumber}";
+                            // int unreadCount = unreadCounts[key] ?? 0;
+                            int unreadCount = message.conversation?.notAnsweredMessageCount ?? 0;
+
                             if (unreadCount > 0) {
                               return Positioned(
                                 right: 0,
@@ -1048,8 +1076,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                                 // Unread count göster
                                 Builder(
                                   builder: (context) {
-                                    String key = "${selectedPhoneId}_${message.phoneNumber}";
-                                    int unreadCount = unreadCounts[key] ?? 0;
+                                    int unreadCount = message.conversation?.notAnsweredMessageCount ?? 0;
                                     if (unreadCount > 0) {
                                       return Container(
                                         margin: const EdgeInsets.only(top: 4),
@@ -1174,7 +1201,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   tooltip: 'Yenile',
                 ),
                 // Görüşmeyi Bitir Butonu
-               ref.read(_mainViewModel.allMessages).where((e) => e.phoneNumber == selectedMainPhone).first.messages!.where((e) => e.phoneNumber == selectedContactPhone).first.converisationStatus == true ? Container(
+               ref.read(_mainViewModel.allMessages).where((e) => e.phoneNumber == selectedMainPhone).first.messages!.where((e) => e.phoneNumber == selectedContactPhone).first.converisationStatus == true && ref.read(_mainViewModel.allMessages).where((e) => e.phoneNumber == selectedMainPhone).first.messages!.where((e) => e.phoneNumber == selectedContactPhone).first.assignedUserInfo  == ((ref.read(_mainViewModel.loggedUser).name ?? "") + " " + (ref.read(_mainViewModel.loggedUser).surname ?? "")) ? Container(
                   margin: const EdgeInsets.only(left: 8),
                   child: ElevatedButton.icon(
                     onPressed: () => _showEndConversationDialog(),

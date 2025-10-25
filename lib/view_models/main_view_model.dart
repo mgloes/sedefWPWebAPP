@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sedefwpwebapp/contants.dart';
+import 'package:sedefwpwebapp/models/conversation_model/conversation_model.dart';
 import 'package:sedefwpwebapp/models/get_all_message_for_main_phones_model/get_all_message_for_main_phones_model.dart';
 import 'package:sedefwpwebapp/models/get_all_message_model/get_all_message_model.dart';
 import 'package:sedefwpwebapp/models/message_model/message_model.dart';
 import 'package:sedefwpwebapp/models/phone_number_model/phone_number_model.dart';
 import 'package:sedefwpwebapp/models/response_model/response_model.dart';
+import 'package:sedefwpwebapp/models/settings_model/settings_model.dart';
 import 'package:sedefwpwebapp/models/user_model/user_model.dart';
 import 'package:sedefwpwebapp/services/main_service.dart';
 import 'package:sedefwpwebapp/utilities/data_utilities.dart';
@@ -27,9 +29,11 @@ class MainViewModel {
   //MAIN Variables
   final loggedUser = StateProvider<UserModel>((ref) => UserModel());
   final phoneNumbers = StateProvider<List<PhoneNumberModel>>((ref) => []);
+  final settings = StateProvider<SettingsModel>((ref) => SettingsModel());
   final allMessages = StateProvider<List<GetAllMessageForMainPhonesModel>>((ref) => []);
   final messages = StateProvider<List<MessageModel>>((ref) => []);
   final users = StateProvider<List<UserModel>>((ref) => []);
+  final conversations = StateProvider<List<ConversationModel>>((ref) => []);
   late WebSocketChannel socket;
   //Colors
 
@@ -65,6 +69,7 @@ class MainViewModel {
               lastMessageDate: message.createdDate ?? DateTime.now(),
               phoneNumber: (message.senderPhoneNumber == "902163756781" ? message.receiverPhoneNumber : message.senderPhoneNumber) ?? "",
               phoneNumberNameSurname: message.senderPhoneNumber == "902163756781" ?message.receiverNameSurname ?? "" : message.senderNameSurname ?? "" ,
+              conversation: message.conversation ?? currentMessages[messageIndex].conversation,
             );
 
           final updatedAllMessages = List<GetAllMessageForMainPhonesModel>.from(ref.read(allMessages));
@@ -252,6 +257,53 @@ class MainViewModel {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bir hata oluştu")));
     }
   }
+   Future<void> updateConversation(WidgetRef ref, BuildContext context, int conversationId, bool status) async {
+    try {
+      ResponseModel res = await _mainService.updateConversation(conversationId, status);
+      if(res.isSuccess ?? false){
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Konuşma durumu başarıyla güncellendi"),
+          backgroundColor: Colors.green,
+        ));
+        await getAllMessages(ref, context);
+       
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bir hata oluştu")));
+    }
+  }
+   Future<void> updateSettings(WidgetRef ref, BuildContext context, bool status) async {
+    try {
+      ResponseModel res = await _mainService.updateSettings(status);
+      if(res.isSuccess ?? false){
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Ayarlar başarıyla güncellendi"),
+          backgroundColor: Colors.green,
+        ));
+        await getSettings(ref, context);
+       
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bir hata oluştu")));
+    }
+  }
+   Future<void> getSettings(WidgetRef ref, BuildContext context) async {
+    try {
+      ResponseModel res = await _mainService.getSettings();
+      if(res.isSuccess ?? false){
+        ref.read(settings.notifier).state = SettingsModel.fromJson(res.data);
+       
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bir hata oluştu")));
+    }
+  }
   Future<void> deletePhoneNumber(WidgetRef ref, BuildContext context, int phoneNumberId) async {
     try {
       ResponseModel res = await _mainService.deletePhoneNumber(phoneNumberId);
@@ -316,6 +368,7 @@ class MainViewModel {
       ResponseModel res = await _mainService.GetAllMessages();
       if(res.isSuccess ?? false){
           ref.read(allMessages.notifier).state = List<GetAllMessageForMainPhonesModel>.from(res.data.map((e) => GetAllMessageForMainPhonesModel.fromJson(e)).toList());
+          inspect(ref.read(allMessages)); // --- IGNORE ---
       }else{
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }
@@ -392,6 +445,18 @@ class MainViewModel {
       ResponseModel res = await _mainService.getListUser();
       if(res.isSuccess ?? false){
           ref.read(users.notifier).state = (res.data as List).map((e) => UserModel.fromJson(e)).toList();
+      }else{
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Bir hata oluştu")));
+    }
+  }
+       Future<void> getListConversations(WidgetRef ref,BuildContext context) async {
+    try {
+      ResponseModel res = await _mainService.getListConversations();
+      if(res.isSuccess ?? false){
+          ref.read(conversations.notifier).state = (res.data as List).map((e) => ConversationModel.fromJson(e)).toList();
       }else{
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }

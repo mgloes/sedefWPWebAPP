@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GetAllMessageModel {
 
- String? get lastMessage; set lastMessage(String? value); DateTime? get lastMessageDate; set lastMessageDate(DateTime? value); String? get phoneNumber; set phoneNumber(String? value); String? get phoneNumberNameSurname; set phoneNumberNameSurname(String? value); String? get assignedUserInfo; set assignedUserInfo(String? value); DateTime? get assignedDate; set assignedDate(DateTime? value); bool? get converisationStatus; set converisationStatus(bool? value);
+ String? get lastMessage; set lastMessage(String? value); DateTime? get lastMessageDate; set lastMessageDate(DateTime? value); String? get phoneNumber; set phoneNumber(String? value); String? get phoneNumberNameSurname; set phoneNumberNameSurname(String? value); String? get assignedUserInfo; set assignedUserInfo(String? value); DateTime? get assignedDate; set assignedDate(DateTime? value); bool? get converisationStatus; set converisationStatus(bool? value); ConversationModel? get conversation; set conversation(ConversationModel? value);
 /// Create a copy of GetAllMessageModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,7 +30,7 @@ $GetAllMessageModelCopyWith<GetAllMessageModel> get copyWith => _$GetAllMessageM
 
 @override
 String toString() {
-  return 'GetAllMessageModel(lastMessage: $lastMessage, lastMessageDate: $lastMessageDate, phoneNumber: $phoneNumber, phoneNumberNameSurname: $phoneNumberNameSurname, assignedUserInfo: $assignedUserInfo, assignedDate: $assignedDate, converisationStatus: $converisationStatus)';
+  return 'GetAllMessageModel(lastMessage: $lastMessage, lastMessageDate: $lastMessageDate, phoneNumber: $phoneNumber, phoneNumberNameSurname: $phoneNumberNameSurname, assignedUserInfo: $assignedUserInfo, assignedDate: $assignedDate, converisationStatus: $converisationStatus, conversation: $conversation)';
 }
 
 
@@ -41,11 +41,11 @@ abstract mixin class $GetAllMessageModelCopyWith<$Res>  {
   factory $GetAllMessageModelCopyWith(GetAllMessageModel value, $Res Function(GetAllMessageModel) _then) = _$GetAllMessageModelCopyWithImpl;
 @useResult
 $Res call({
- String? lastMessage, DateTime? lastMessageDate, String? phoneNumber, String? phoneNumberNameSurname, String? assignedUserInfo, DateTime? assignedDate, bool? converisationStatus
+ String? lastMessage, DateTime? lastMessageDate, String? phoneNumber, String? phoneNumberNameSurname, String? assignedUserInfo, DateTime? assignedDate, bool? converisationStatus, ConversationModel? conversation
 });
 
 
-
+$ConversationModelCopyWith<$Res>? get conversation;
 
 }
 /// @nodoc
@@ -58,7 +58,7 @@ class _$GetAllMessageModelCopyWithImpl<$Res>
 
 /// Create a copy of GetAllMessageModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lastMessage = freezed,Object? lastMessageDate = freezed,Object? phoneNumber = freezed,Object? phoneNumberNameSurname = freezed,Object? assignedUserInfo = freezed,Object? assignedDate = freezed,Object? converisationStatus = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? lastMessage = freezed,Object? lastMessageDate = freezed,Object? phoneNumber = freezed,Object? phoneNumberNameSurname = freezed,Object? assignedUserInfo = freezed,Object? assignedDate = freezed,Object? converisationStatus = freezed,Object? conversation = freezed,}) {
   return _then(_self.copyWith(
 lastMessage: freezed == lastMessage ? _self.lastMessage : lastMessage // ignore: cast_nullable_to_non_nullable
 as String?,lastMessageDate: freezed == lastMessageDate ? _self.lastMessageDate : lastMessageDate // ignore: cast_nullable_to_non_nullable
@@ -67,10 +67,23 @@ as String?,phoneNumberNameSurname: freezed == phoneNumberNameSurname ? _self.pho
 as String?,assignedUserInfo: freezed == assignedUserInfo ? _self.assignedUserInfo : assignedUserInfo // ignore: cast_nullable_to_non_nullable
 as String?,assignedDate: freezed == assignedDate ? _self.assignedDate : assignedDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,converisationStatus: freezed == converisationStatus ? _self.converisationStatus : converisationStatus // ignore: cast_nullable_to_non_nullable
-as bool?,
+as bool?,conversation: freezed == conversation ? _self.conversation : conversation // ignore: cast_nullable_to_non_nullable
+as ConversationModel?,
   ));
 }
+/// Create a copy of GetAllMessageModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ConversationModelCopyWith<$Res>? get conversation {
+    if (_self.conversation == null) {
+    return null;
+  }
 
+  return $ConversationModelCopyWith<$Res>(_self.conversation!, (value) {
+    return _then(_self.copyWith(conversation: value));
+  });
+}
 }
 
 
@@ -152,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? lastMessage,  DateTime? lastMessageDate,  String? phoneNumber,  String? phoneNumberNameSurname,  String? assignedUserInfo,  DateTime? assignedDate,  bool? converisationStatus)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? lastMessage,  DateTime? lastMessageDate,  String? phoneNumber,  String? phoneNumberNameSurname,  String? assignedUserInfo,  DateTime? assignedDate,  bool? converisationStatus,  ConversationModel? conversation)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GetAllMessageModel() when $default != null:
-return $default(_that.lastMessage,_that.lastMessageDate,_that.phoneNumber,_that.phoneNumberNameSurname,_that.assignedUserInfo,_that.assignedDate,_that.converisationStatus);case _:
+return $default(_that.lastMessage,_that.lastMessageDate,_that.phoneNumber,_that.phoneNumberNameSurname,_that.assignedUserInfo,_that.assignedDate,_that.converisationStatus,_that.conversation);case _:
   return orElse();
 
 }
@@ -173,10 +186,10 @@ return $default(_that.lastMessage,_that.lastMessageDate,_that.phoneNumber,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? lastMessage,  DateTime? lastMessageDate,  String? phoneNumber,  String? phoneNumberNameSurname,  String? assignedUserInfo,  DateTime? assignedDate,  bool? converisationStatus)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? lastMessage,  DateTime? lastMessageDate,  String? phoneNumber,  String? phoneNumberNameSurname,  String? assignedUserInfo,  DateTime? assignedDate,  bool? converisationStatus,  ConversationModel? conversation)  $default,) {final _that = this;
 switch (_that) {
 case _GetAllMessageModel():
-return $default(_that.lastMessage,_that.lastMessageDate,_that.phoneNumber,_that.phoneNumberNameSurname,_that.assignedUserInfo,_that.assignedDate,_that.converisationStatus);case _:
+return $default(_that.lastMessage,_that.lastMessageDate,_that.phoneNumber,_that.phoneNumberNameSurname,_that.assignedUserInfo,_that.assignedDate,_that.converisationStatus,_that.conversation);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -193,10 +206,10 @@ return $default(_that.lastMessage,_that.lastMessageDate,_that.phoneNumber,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? lastMessage,  DateTime? lastMessageDate,  String? phoneNumber,  String? phoneNumberNameSurname,  String? assignedUserInfo,  DateTime? assignedDate,  bool? converisationStatus)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? lastMessage,  DateTime? lastMessageDate,  String? phoneNumber,  String? phoneNumberNameSurname,  String? assignedUserInfo,  DateTime? assignedDate,  bool? converisationStatus,  ConversationModel? conversation)?  $default,) {final _that = this;
 switch (_that) {
 case _GetAllMessageModel() when $default != null:
-return $default(_that.lastMessage,_that.lastMessageDate,_that.phoneNumber,_that.phoneNumberNameSurname,_that.assignedUserInfo,_that.assignedDate,_that.converisationStatus);case _:
+return $default(_that.lastMessage,_that.lastMessageDate,_that.phoneNumber,_that.phoneNumberNameSurname,_that.assignedUserInfo,_that.assignedDate,_that.converisationStatus,_that.conversation);case _:
   return null;
 
 }
@@ -208,7 +221,7 @@ return $default(_that.lastMessage,_that.lastMessageDate,_that.phoneNumber,_that.
 @JsonSerializable()
 
 class _GetAllMessageModel extends GetAllMessageModel {
-   _GetAllMessageModel({this.lastMessage, this.lastMessageDate, this.phoneNumber, this.phoneNumberNameSurname, this.assignedUserInfo, this.assignedDate, this.converisationStatus}): super._();
+   _GetAllMessageModel({this.lastMessage, this.lastMessageDate, this.phoneNumber, this.phoneNumberNameSurname, this.assignedUserInfo, this.assignedDate, this.converisationStatus, this.conversation}): super._();
   factory _GetAllMessageModel.fromJson(Map<String, dynamic> json) => _$GetAllMessageModelFromJson(json);
 
 @override  String? lastMessage;
@@ -218,6 +231,7 @@ class _GetAllMessageModel extends GetAllMessageModel {
 @override  String? assignedUserInfo;
 @override  DateTime? assignedDate;
 @override  bool? converisationStatus;
+@override  ConversationModel? conversation;
 
 /// Create a copy of GetAllMessageModel
 /// with the given fields replaced by the non-null parameter values.
@@ -234,7 +248,7 @@ Map<String, dynamic> toJson() {
 
 @override
 String toString() {
-  return 'GetAllMessageModel(lastMessage: $lastMessage, lastMessageDate: $lastMessageDate, phoneNumber: $phoneNumber, phoneNumberNameSurname: $phoneNumberNameSurname, assignedUserInfo: $assignedUserInfo, assignedDate: $assignedDate, converisationStatus: $converisationStatus)';
+  return 'GetAllMessageModel(lastMessage: $lastMessage, lastMessageDate: $lastMessageDate, phoneNumber: $phoneNumber, phoneNumberNameSurname: $phoneNumberNameSurname, assignedUserInfo: $assignedUserInfo, assignedDate: $assignedDate, converisationStatus: $converisationStatus, conversation: $conversation)';
 }
 
 
@@ -245,11 +259,11 @@ abstract mixin class _$GetAllMessageModelCopyWith<$Res> implements $GetAllMessag
   factory _$GetAllMessageModelCopyWith(_GetAllMessageModel value, $Res Function(_GetAllMessageModel) _then) = __$GetAllMessageModelCopyWithImpl;
 @override @useResult
 $Res call({
- String? lastMessage, DateTime? lastMessageDate, String? phoneNumber, String? phoneNumberNameSurname, String? assignedUserInfo, DateTime? assignedDate, bool? converisationStatus
+ String? lastMessage, DateTime? lastMessageDate, String? phoneNumber, String? phoneNumberNameSurname, String? assignedUserInfo, DateTime? assignedDate, bool? converisationStatus, ConversationModel? conversation
 });
 
 
-
+@override $ConversationModelCopyWith<$Res>? get conversation;
 
 }
 /// @nodoc
@@ -262,7 +276,7 @@ class __$GetAllMessageModelCopyWithImpl<$Res>
 
 /// Create a copy of GetAllMessageModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lastMessage = freezed,Object? lastMessageDate = freezed,Object? phoneNumber = freezed,Object? phoneNumberNameSurname = freezed,Object? assignedUserInfo = freezed,Object? assignedDate = freezed,Object? converisationStatus = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? lastMessage = freezed,Object? lastMessageDate = freezed,Object? phoneNumber = freezed,Object? phoneNumberNameSurname = freezed,Object? assignedUserInfo = freezed,Object? assignedDate = freezed,Object? converisationStatus = freezed,Object? conversation = freezed,}) {
   return _then(_GetAllMessageModel(
 lastMessage: freezed == lastMessage ? _self.lastMessage : lastMessage // ignore: cast_nullable_to_non_nullable
 as String?,lastMessageDate: freezed == lastMessageDate ? _self.lastMessageDate : lastMessageDate // ignore: cast_nullable_to_non_nullable
@@ -271,11 +285,24 @@ as String?,phoneNumberNameSurname: freezed == phoneNumberNameSurname ? _self.pho
 as String?,assignedUserInfo: freezed == assignedUserInfo ? _self.assignedUserInfo : assignedUserInfo // ignore: cast_nullable_to_non_nullable
 as String?,assignedDate: freezed == assignedDate ? _self.assignedDate : assignedDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,converisationStatus: freezed == converisationStatus ? _self.converisationStatus : converisationStatus // ignore: cast_nullable_to_non_nullable
-as bool?,
+as bool?,conversation: freezed == conversation ? _self.conversation : conversation // ignore: cast_nullable_to_non_nullable
+as ConversationModel?,
   ));
 }
 
+/// Create a copy of GetAllMessageModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ConversationModelCopyWith<$Res>? get conversation {
+    if (_self.conversation == null) {
+    return null;
+  }
 
+  return $ConversationModelCopyWith<$Res>(_self.conversation!, (value) {
+    return _then(_self.copyWith(conversation: value));
+  });
+}
 }
 
 // dart format on

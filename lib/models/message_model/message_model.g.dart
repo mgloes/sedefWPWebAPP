@@ -26,6 +26,11 @@ _MessageModel _$MessageModelFromJson(Map<String, dynamic> json) =>
       textBody: json['textBody'] as String?,
       isConversation: json['isConversation'] as bool?,
       timestamp: json['timestamp'] as String?,
+      conversation: json['conversation'] == null
+          ? null
+          : ConversationModel.fromJson(
+              json['conversation'] as Map<String, dynamic>,
+            ),
     );
 
 Map<String, dynamic> _$MessageModelToJson(_MessageModel instance) =>
@@ -44,4 +49,5 @@ Map<String, dynamic> _$MessageModelToJson(_MessageModel instance) =>
       'textBody': instance.textBody,
       'isConversation': instance.isConversation,
       'timestamp': instance.timestamp,
+      'conversation': instance.conversation,
     };
