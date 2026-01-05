@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:html' as html;
 
+import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cross_file/cross_file.dart';
@@ -18,6 +18,7 @@ import 'package:sedefwpwebapp/models/message_model/message_model.dart';
 import 'package:sedefwpwebapp/models/phone_number_model/phone_number_model.dart';
 import 'package:sedefwpwebapp/utilities/data_utilities.dart';
 import 'package:sedefwpwebapp/view_models/main_view_model.dart';
+import 'package:sedefwpwebapp/widgets/pdf_viewer_widget.dart';
 import '../contants.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
@@ -49,6 +50,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   
   // İlk yükleme kontrolü
   bool _isInitialLoad = true;
+  int _previousUnreadCount = 0;
 
   @override
   void initState() {
@@ -66,8 +68,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           if (next.isNotEmpty && previous != null && next.length > previous.length) {
             // Yeni mesaj geldiğinde ses çal (sadece alınan mesajlar için)
             final newMessage = next.last;
-            if (newMessage.senderPhoneNumber != selectedMainPhone) {
-              if(!previous.isEmpty && !_isInitialLoad){
+            if (newMessage.senderPhoneNumber != selectedMainPhone && newMessage.senderPhoneNumber != "902164911946") {
+              if(previous.isNotEmpty && !_isInitialLoad){
                 _playMessageSound();
               }
             }
@@ -79,63 +81,41 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         },
       );
       
-      // AllMessages listesini dinle ve yeni mesaj geldiğinde unread count artır
-      // ref.listenManual(
-      //   _mainViewModel.allMessages,
-      //   (previous, next) {
-      //     // İlk yükleme sırasında unread count hesaplama
-      //     if (_isInitialLoad) return;
+      // AllMessages listesini dinle ve totalUnreadCount artışını kontrol et
+      ref.listenManual(
+        _mainViewModel.allMessages,
+        (previous, next) {
+          // İlk yükleme sırasında ses çalma
+          if (_isInitialLoad) {
+            return;
+          }
           
-      //     if (previous != null && next.isNotEmpty) {
-      //       // Yeni mesaj geldiğinde unread count'u güncelle
-      //       for (var phoneData in next) {
-      //         if (phoneData.messages != null) {
-      //           for (var message in phoneData.messages!) {
-      //             String key = "${phoneData.phoneNumber}_${message.phoneNumber}";
-                  
-      //             // Eğer bu konuşma şu anda açık değilse unread count artır
-      //             if (selectedMainPhone != phoneData.phoneNumber || 
-      //                 selectedContactPhone != message.phoneNumber) {
-                    
-      //               // Önceki listede bu mesaj var mı kontrol et
-      //               bool isNewMessage = true;
-      //               if (previous.isNotEmpty) {
-      //                 var previousPhoneData = previous.firstWhere(
-      //                   (p) => p.phoneNumber == phoneData.phoneNumber, 
-      //                   orElse: () => GetAllMessageForMainPhonesModel(phoneNumber: '', messages: [])
-      //                 );
-                      
-      //                 if (previousPhoneData.phoneNumber?.isNotEmpty == true && 
-      //                     previousPhoneData.messages != null) {
-      //                   var previousMessage = previousPhoneData.messages!.firstWhere(
-      //                     (m) => m.phoneNumber == message.phoneNumber,
-      //                     orElse: () => GetAllMessageModel(phoneNumber: '', lastMessage: '', lastMessageDate: DateTime.now())
-      //                   );
-                        
-      //                   // Aynı mesaj varsa ve tarih aynıysa yeni değil
-      //                   if (previousMessage.phoneNumber?.isNotEmpty == true &&
-      //                       previousMessage.lastMessage == message.lastMessage &&
-      //                       previousMessage.lastMessageDate == message.lastMessageDate) {
-      //                     isNewMessage = false;
-      //                   }
-      //                 }
-      //               }
-                    
-      //               if (isNewMessage) {
-      //                 if(!previous.isEmpty && !_isInitialLoad){
-      //                   _playMessageSound();
-      //                 }
-      //                 setState(() {
-      //                   unreadCounts[key] = (unreadCounts[key] ?? 0) + 1;
-      //                 });
-      //               }
-      //             }
-      //           }
-      //         }
-      //       }
-      //     }
-      //   },
-      // );
+          // Toplam okunmamış mesaj sayısını hesapla
+          int currentUnreadCount = 0;
+          try {
+            for (var phoneData in next) {
+              if (phoneData.messages != null) {
+                for (var message in phoneData.messages!) {
+                  if (message.conversation != null) {
+                    currentUnreadCount += (message.conversation!.notAnsweredMessageCount ?? 0);
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            print('🔔 Unread count hesaplama hatası: $e');
+          }
+          
+          // Eğer unread count artmışsa ses çal
+          if (currentUnreadCount > _previousUnreadCount) {
+            print('🔔 Unread count arttı: $_previousUnreadCount -> $currentUnreadCount');
+            _playMessageSound();
+          }
+          
+          // Yeni değeri sakla
+          _previousUnreadCount = currentUnreadCount;
+        },
+      );
     });
   }
 
@@ -148,10 +128,25 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     await _mainViewModel.getMyUser(ref, context);
     await _mainViewModel.connectToSocket(ref, context);
     
+    // Browser notification izni iste
+    _requestNotificationPermission();
+    
+    // Başlangıç unread count'u sakla
+    _previousUnreadCount = _calculateTotalUnreadCount();
+    
     // İlk yükleme tamamlandı
     setState(() {
       _isInitialLoad = false;
     });
+  }
+  
+  Future<void> _requestNotificationPermission() async {
+    try {
+      final permission = await html.Notification.requestPermission();
+      print('🔔 Notification permission: $permission');
+    } catch (e) {
+      print('🔔 Notification permission hatası: $e');
+    }
   }
 
   @override
@@ -163,27 +158,74 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     super.dispose();
   }
 
-  // Mesaj sesi çalma fonksiyonu
-  Future<void> _playMessageSound() async {
+  // Tarayıcı başlığını güncelle
+  void _updateBrowserTitle(int unreadCount) {
     try {
-      // Assets klasöründeki notification.mp3 dosyasını çal
-      await _audioPlayer.play(AssetSource('assets/sounds/notification.mp3'));
+      if (unreadCount > 0) {
+        html.document.title = '($unreadCount) Sedef Döviz WhatsApp Destek';
+      } else {
+        html.document.title = 'Sedef Döviz WhatsApp Destek';
+      }
     } catch (e) {
-      try {
-        // Alternatif: Volume ayarlayıp tekrar dene
-        await _audioPlayer.setVolume(0.5);
-        await _audioPlayer.play(AssetSource('sounds/notification.mp3'));
-      } catch (e2) {
-        // Son çare: Console'da mesaj göster
-        print('🔔 Yeni mesaj geldi! (Ses çalamadı)');
-        
-        // Web için HTML5 notification gösterebiliriz
-        try {
-          html.Notification('Yeni Mesaj', body: 'WhatsApp Web\'de yeni bir mesaj aldınız!');
-        } catch (e3) {
-          // Hiçbir şey yapma, sadece console log
+    }
+  }
+
+  // Toplam okunmamış mesaj sayısını hesapla
+  int _calculateTotalUnreadCount() {
+    int total = 0;
+    try {
+      final allMessages = ref.read(_mainViewModel.allMessages);
+      final loggedUser = ref.read(_mainViewModel.loggedUser);
+      
+      for (var phoneData in allMessages) {
+        if (phoneData.messages != null) {
+          // Her konuşmanın notAnsweredMessageCount değerlerini topla
+          for (var message in phoneData.messages!) {
+            if (message.conversation != null) {
+              total += (message.conversation!.notAnsweredMessageCount ?? 0);
+            }
+          }
         }
       }
+      
+      // Admin değilse sayıyı yarıya böl
+      if (loggedUser.role != "ADMIN") {
+        total = (total / 2).ceil(); // ceil ile yuvarla
+      }
+    } catch (e) {
+    }
+    return total;
+  }
+
+  // Mesaj sesi çalma fonksiyonu
+  Future<void> _playMessageSound() async {
+    // Ses çal
+    try {
+      await _audioPlayer.setVolume(0.8);
+      await _audioPlayer.play(AssetSource('sounds/notification.mp3'));
+    } catch (e) {
+      print('🔔 Ses çalma hatası: $e');
+    }
+    
+    // Browser notification göster
+    try {
+      if (html.Notification.permission == 'granted') {
+        html.Notification('🔔 Yeni Mesaj Geldi!', 
+          body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
+          icon: 'icons/Icon-192.png',
+        );
+      } else if (html.Notification.permission == 'default') {
+        // İzin verilmemişse tekrar sor
+        final permission = await html.Notification.requestPermission();
+        if (permission == 'granted') {
+          html.Notification('🔔 Yeni Mesaj Geldi!', 
+            body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
+            icon: 'icons/Icon-192.png',
+          );
+        }
+      }
+    } catch (e) {
+      print('🔔 Notification hatası: $e');
     }
   }
 
@@ -229,7 +271,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     // ref.read(_mainViewModel.messages.notifier).state.add(MessageModel(
     //   id: null,
-    //   senderPhoneNumber: selectedMainPhone == "Özel Mesajlar" ? "902163756781" : selectedMainPhone!,
+    //   senderPhoneNumber: selectedMainPhone == "Özel Mesajlar" ? "902164911946" : selectedMainPhone!,
     //   senderNameSurname: (ref.read(_mainViewModel.loggedUser).name ?? "") + " " + (ref.read(_mainViewModel.loggedUser).surname ?? ""),
     //   receiverPhoneNumber: selectedContactPhone,
     //   textBody: _messageController.text,
@@ -534,6 +576,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final allMessages = ref.watch(_mainViewModel.allMessages);
     final messages = ref.watch(_mainViewModel.messages);
     final loggedUser = ref.watch(_mainViewModel.loggedUser);
+
+    // Okunmamış mesaj sayısını hesapla ve tarayıcı başlığını güncelle
+    final totalUnreadCount = _calculateTotalUnreadCount();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateBrowserTitle(totalUnreadCount);
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),
@@ -1244,7 +1292,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       final message = messages[reversedIndex];
                       return ChatBubble(
                         message: message,
-                        isUser: message.senderPhoneNumber == (selectedMainPhone == "Özel Mesajlar" ? "902163756781" : selectedMainPhone),
+                        isUser: message.senderPhoneNumber == (selectedMainPhone == "Özel Mesajlar" ? "902164911946" : selectedMainPhone),
                         context: context,
                       );
                     },
@@ -1460,35 +1508,60 @@ class ChatBubble extends ConsumerWidget {
                   ? CrossAxisAlignment.end
                   : CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isUser
-                        ? const Color(0xFF667eea)
-                        : const Color(0xFFF1F3F4),
-                    borderRadius: BorderRadius.circular(18).copyWith(
-                      bottomRight: isUser
-                          ? const Radius.circular(4)
-                          : const Radius.circular(18),
-                      bottomLeft: isUser
-                          ? const Radius.circular(18)
-                          : const Radius.circular(4),
+                GestureDetector(
+                  onSecondaryTap: () => _showMessageContextMenu(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
+                    decoration: BoxDecoration(
+                      color: isUser
+                          ? const Color(0xFF667eea)
+                          : const Color(0xFFF1F3F4),
+                      borderRadius: BorderRadius.circular(18).copyWith(
+                        bottomRight: isUser
+                            ? const Radius.circular(4)
+                            : const Radius.circular(18),
+                        bottomLeft: isUser
+                            ? const Radius.circular(18)
+                            : const Radius.circular(4),
+                      ),
+                    ),
+                    child: _buildMessageContent(),
                   ),
-                  child: _buildMessageContent(),
                 ),
                 const SizedBox(height: 4),
-                Text((message.senderNameSurname != null ? message.senderNameSurname! : "") + ' · ' +
-                  (message.createdDate != null 
-                      ? _formatTime(message.createdDate!)
-                      : ''),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade500,
-                  ),
+                Row(
+                  mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                  children: [
+                    Text((message.senderNameSurname != null ? message.senderNameSurname! : "") + ' · ' +
+                      (message.createdDate != null 
+                          ? _formatTime(message.createdDate!)
+                          : ''),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                    if (message.messageType == "text") ...[
+                      const SizedBox(width: 8),
+                      MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () => _copyMessage(),
+                          child: Tooltip(
+                            message: 'Kopyala',
+                            child: Icon(
+                              Icons.content_copy,
+                              size: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -2218,16 +2291,7 @@ class ChatBubble extends ConsumerWidget {
           ),
         );
       case '.pdf':
-        return Container(
-          color: Colors.white,
-          child: const Center(
-            child: Text(
-              'PDF önizlemesi bu sürümde desteklenmiyor.\nİndirmek için sol üstteki indirme butonunu kullanın.',
-              style: TextStyle(color: Colors.black, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        );
+        return _buildPdfViewer(url);
       case '.txt':
         return Container(
           color: Colors.white,
@@ -2345,6 +2409,82 @@ class ChatBubble extends ConsumerWidget {
         return '$day/$month/$year $hourMinute';
       }
     }
+  }
+
+  void _copyMessage() {
+    if (message.messageType == "text" && message.textBody != null) {
+      Clipboard.setData(ClipboardData(text: message.textBody!));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mesaj kopyalandı'),
+          duration: Duration(seconds: 1),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  void _showMessageContextMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu(
+      context: context,
+      position: position,
+      items: [
+        PopupMenuItem(
+          onTap: () => _copyMessage(),
+          child: const Row(
+            children: [
+              Icon(Icons.content_copy, size: 18),
+              SizedBox(width: 8),
+              Text('Kopyala'),
+            ],
+          ),
+        ),
+        if (message.messageType == "text") ...[
+          PopupMenuItem(
+            onTap: () {
+              final text = '${message.senderNameSurname}\n${message.textBody}';
+              Clipboard.setData(ClipboardData(text: text));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Mesaj ve gönderenin adı kopyalandı'),
+                  duration: Duration(seconds: 1),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Row(
+              children: [
+                Icon(Icons.person_add, size: 18),
+                SizedBox(width: 8),
+                Text('Göndereni de Kopyala'),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPdfViewer(String url) {
+    // URL kontrolü - eğer medya ID'si ise tam URL oluştur
+    String pdfUrl = url;
+    if (!url.contains('http')) {
+      pdfUrl = envPath + "/Message/getMedia?mediaId=" + url;
+    }
+    
+    // PDF viewer widget'ı doğrudan kullan - full screen overlay gösterir
+    return PdfViewerWidget(pdfUrl: pdfUrl);
   }
 
 }

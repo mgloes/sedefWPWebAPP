@@ -49,33 +49,35 @@ class MainViewModel {
         try {
           
             message = MessageModel.fromJson(jsonDecode(data));
-          inspect(message); // --- IGNORE ---
+
        
       if(ref.read(messages).where((e) => e.senderPhoneNumber == message.senderPhoneNumber || e.senderPhoneNumber == message.receiverPhoneNumber).isNotEmpty && message.messageType != "interactive"){
         ref.read(messages.notifier).state = [...ref.read(messages), message];
       }
 
         final allMessagesList = ref.read(allMessages);
-        // final index =  allMessagesList.indexWhere((element) => element.phoneNumber == (message.isConversation == true ?  message.receiverPhoneNumber == "902163756781" ?  "Özel Mesajlar"  : message.receiverPhoneNumber : message.receiverPhoneNumber));
-        inspect(allMessagesList);
+        // final index =  allMessagesList.indexWhere((element) => element.phoneNumber == (message.isConversation == true ?  message.receiverPhoneNumber == "902164911946" ?  "Özel Mesajlar"  : message.receiverPhoneNumber : message.receiverPhoneNumber));
+
         allMessagesList.forEach((element) async {
                 final currentMessages = List<GetAllMessageModel>.from(element.messages as List<GetAllMessageModel>);
-          final messageIndex = currentMessages.indexWhere((msg) => msg.phoneNumber == (message.senderPhoneNumber == "902163756781" ? message.receiverPhoneNumber : message.senderPhoneNumber));
+          final messageIndex = currentMessages.indexWhere((msg) => msg.phoneNumber == (message.senderPhoneNumber == "902164911946" ? message.receiverPhoneNumber : message.senderPhoneNumber));
           
           if (messageIndex != -1) {
             // Mevcut mesajı güncelle
             currentMessages[messageIndex] = currentMessages[messageIndex].copyWith(
               lastMessage: message.textBody ?? "",
               lastMessageDate: message.createdDate ?? DateTime.now(),
-              phoneNumber: (message.senderPhoneNumber == "902163756781" ? message.receiverPhoneNumber : message.senderPhoneNumber) ?? "",
-              phoneNumberNameSurname: message.senderPhoneNumber == "902163756781" ?message.receiverNameSurname ?? "" : message.senderNameSurname ?? "" ,
+              phoneNumber: (message.senderPhoneNumber == "902164911946" ? message.receiverPhoneNumber : message.senderPhoneNumber) ?? "",
+              phoneNumberNameSurname: message.senderPhoneNumber == "902164911946" ?message.receiverNameSurname ?? "" : message.senderNameSurname ?? "" ,
               conversation: message.conversation ?? currentMessages[messageIndex].conversation,
             );
 
           final updatedAllMessages = List<GetAllMessageForMainPhonesModel>.from(ref.read(allMessages));
           var index = updatedAllMessages.indexWhere((e) => e.phoneNumber == element.phoneNumber);
           updatedAllMessages[index] = updatedAllMessages[index].copyWith(messages: currentMessages);
-          ref.read(allMessages.notifier).state = updatedAllMessages;
+          // Yeni bir liste referansı oluştur ki Riverpod değişikliği algılasın
+          ref.read(allMessages.notifier).state = [...updatedAllMessages];
+          print('🔄 [VIEWMODEL] allMessages güncellendi - Toplam telefon: ${updatedAllMessages.length}');
 
           } else {
             await getAllMessages(ref, context);
@@ -83,8 +85,8 @@ class MainViewModel {
             // currentMessages.add(GetAllMessageModel(
             //   lastMessage: message.textBody ?? "",
             //   lastMessageDate: message.createdDate ?? DateTime.now(),
-            //   phoneNumber: (message.senderPhoneNumber == "902163756781" ? message.receiverPhoneNumber : message.senderPhoneNumber) ?? "",
-            //   phoneNumberNameSurname: message.senderPhoneNumber == "902163756781" ?message.receiverNameSurname ?? "" : message.senderNameSurname ?? "" ,
+            //   phoneNumber: (message.senderPhoneNumber == "902164911946" ? message.receiverPhoneNumber : message.senderPhoneNumber) ?? "",
+            //   phoneNumberNameSurname: message.senderPhoneNumber == "902164911946" ?message.receiverNameSurname ?? "" : message.senderNameSurname ?? "" ,
             // ));
           }
 
@@ -132,7 +134,7 @@ class MainViewModel {
       ResponseModel res = await _mainService.sendMedia(mainPhoneNumber, to, mediaFile, caption, phoneNumberId);
       print(res);
       if(res.isSuccess ?? false){
-        ref.read(messages.notifier).state.add(MessageModel.fromJson(res.data).copyWith(senderPhoneNumber:MessageModel.fromJson(res.data).senderPhoneNumber == "Özel Mesajlar" ?   "902163756781" : MessageModel.fromJson(res.data).senderPhoneNumber!));
+        ref.read(messages.notifier).state.add(MessageModel.fromJson(res.data).copyWith(senderPhoneNumber:MessageModel.fromJson(res.data).senderPhoneNumber == "Özel Mesajlar" ?   "902164911946" : MessageModel.fromJson(res.data).senderPhoneNumber!));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }
@@ -185,7 +187,7 @@ class MainViewModel {
       ResponseModel res = await _mainService.getAllPhoneNumbers();
       if(res.isSuccess ?? false){
           ref.read(phoneNumbers.notifier).state = List<PhoneNumberModel>.from(res.data.map((e) => PhoneNumberModel.fromJson(e)).toList());
-          ref.read(loggedUser).role == "ADMIN" ? null : ref.read(phoneNumbers.notifier).state.insert(0, PhoneNumberModel(phoneNumber: "Özel Mesajlar",phoneNumberId: "835767242948963",status: true, title:"Sizin Konuşmalarınız",id: 1));
+          ref.read(loggedUser).role == "ADMIN" ? null : ref.read(phoneNumbers.notifier).state.insert(0, PhoneNumberModel(phoneNumber: "Özel Mesajlar",phoneNumberId: "853587727835263",status: true, title:"Sizin Konuşmalarınız",id: 1));
       }else{
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }
@@ -368,7 +370,7 @@ class MainViewModel {
       ResponseModel res = await _mainService.GetAllMessages();
       if(res.isSuccess ?? false){
           ref.read(allMessages.notifier).state = List<GetAllMessageForMainPhonesModel>.from(res.data.map((e) => GetAllMessageForMainPhonesModel.fromJson(e)).toList());
-          inspect(ref.read(allMessages)); // --- IGNORE ---
+
       }else{
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.message ?? "Bir hata oluştu")));
       }

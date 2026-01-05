@@ -1,6 +1,9 @@
+import 'dart:html' as html;
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sedefwpwebapp/models/get_all_message_for_main_phones_model/get_all_message_for_main_phones_model.dart';
 import 'package:sedefwpwebapp/models/phone_number_model/phone_number_model.dart';
 import 'package:sedefwpwebapp/models/user_model/user_model.dart';
 import 'package:sedefwpwebapp/utilities/data_utilities.dart';
@@ -37,6 +40,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   final _editUserDescriptionController = TextEditingController();
   
   final MainViewModel _mainViewModel = MainViewModel();
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isInitialLoad = true;
+  int _previousUnreadCount = 0;
 
   @override
   void initState() {
@@ -44,7 +50,74 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     // Veri yükleme işlemleri initState'de yapılır
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
+      _setupMessageListener();
     });
+  }
+
+  void _setupMessageListener() {
+    ref.listenManual(
+      _mainViewModel.allMessages,
+      (previous, next) {
+        if (_isInitialLoad) {
+          return;
+        }
+        
+        // Toplam okunmamış mesaj sayısını hesapla
+        int currentUnreadCount = 0;
+        try {
+          for (var phoneData in next) {
+            if (phoneData.messages != null) {
+              for (var message in phoneData.messages!) {
+                if (message.conversation != null) {
+                  currentUnreadCount += (message.conversation!.notAnsweredMessageCount ?? 0);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          print('🔔 [SETTINGS] Unread count hesaplama hatası: $e');
+        }
+        
+        // Eğer unread count artmışsa ses çal
+        if (currentUnreadCount > _previousUnreadCount && _previousUnreadCount > 0) {
+          print('🔔 [SETTINGS] Unread count arttı: $_previousUnreadCount -> $currentUnreadCount');
+          _playMessageSound();
+        }
+        
+        // Yeni değeri sakla
+        _previousUnreadCount = currentUnreadCount;
+      },
+    );
+  }
+
+  Future<void> _playMessageSound() async {
+    // Ses çal
+    try {
+      await _audioPlayer.setVolume(0.8);
+      await _audioPlayer.play(AssetSource('sounds/notification.mp3'));
+    } catch (e) {
+      print('🔔 [SETTINGS] Ses çalma hatası: $e');
+    }
+    
+    // Browser notification göster
+    try {
+      if (html.Notification.permission == 'granted') {
+        html.Notification('🔔 Yeni Mesaj Geldi!', 
+          body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
+          icon: 'icons/Icon-192.png',
+        );
+      } else if (html.Notification.permission == 'default') {
+        final permission = await html.Notification.requestPermission();
+        if (permission == 'granted') {
+          html.Notification('🔔 Yeni Mesaj Geldi!', 
+            body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
+            icon: 'icons/Icon-192.png',
+          );
+        }
+      }
+    } catch (e) {
+      print('🔔 [SETTINGS] Notification hatası: $e');
+    }
   }
 
   Future<void> _loadInitialData() async {
@@ -63,10 +136,43 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     }else{
         context.go('/chat');
     }
+    
+    // Browser notification izni iste
+    _requestNotificationPermission();
+    
+    // Başlangıç unread count'u sakla
+    try {
+      final allMessages = ref.read(_mainViewModel.allMessages);
+      for (var phoneData in allMessages) {
+        if (phoneData.messages != null) {
+          for (var message in phoneData.messages!) {
+            if (message.conversation != null) {
+              _previousUnreadCount += (message.conversation!.notAnsweredMessageCount ?? 0);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      _previousUnreadCount = 0;
+    }
+    
+    setState(() {
+      _isInitialLoad = false;
+    });
+  }
+  
+  Future<void> _requestNotificationPermission() async {
+    try {
+      final permission = await html.Notification.requestPermission();
+      print('🔔 [SETTINGS] Notification permission: $permission');
+    } catch (e) {
+      print('🔔 [SETTINGS] Notification permission hatası: $e');
+    }
   }
 
   @override
   void dispose() {
+    _audioPlayer.dispose();
     _phoneController.dispose();
     _nameController.dispose();
     _editPhoneNumberIdController.dispose();
@@ -570,6 +676,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     // Riverpod state'leri izle
     final phoneNumbers = ref.watch(_mainViewModel.phoneNumbers);
     final loggedUser = ref.watch(_mainViewModel.loggedUser);
+    
+    // Tarayıcı başlığını güncelle
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        html.document.title = 'Ayarlar - Sedef Döviz WhatsApp Destek';
+      } catch (e) {
+        print('Tarayıcı başlığı güncellenemedi: $e');
+      }
+    });
     
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),

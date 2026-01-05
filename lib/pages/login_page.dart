@@ -1,3 +1,4 @@
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -57,6 +58,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isDesktop = screenSize.width > 800;
+
+    // Tarayıcı başlığını güncelle
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        html.document.title = 'Giriş Yap - Sedef Döviz WhatsApp Destek';
+      } catch (e) {
+        print('Tarayıcı başlığı güncellenemedi: $e');
+      }
+    });
 
     return Scaffold(
       body: Container(
