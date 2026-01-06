@@ -20,7 +20,10 @@ abstract class MessageModel with _$MessageModel {
   String? textBody,
   bool? isConversation,
   String? timestamp,
-  ConversationModel? conversation
+  ConversationModel? conversation,
+  double? latitude,
+  double? longitude,
+  String? locationUrl
 
   }) = _MessageModel;
 

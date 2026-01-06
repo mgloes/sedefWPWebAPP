@@ -31,6 +31,9 @@ _MessageModel _$MessageModelFromJson(Map<String, dynamic> json) =>
           : ConversationModel.fromJson(
               json['conversation'] as Map<String, dynamic>,
             ),
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      locationUrl: json['locationUrl'] as String?,
     );
 
 Map<String, dynamic> _$MessageModelToJson(_MessageModel instance) =>
@@ -50,4 +53,7 @@ Map<String, dynamic> _$MessageModelToJson(_MessageModel instance) =>
       'isConversation': instance.isConversation,
       'timestamp': instance.timestamp,
       'conversation': instance.conversation,
+      'latitude': instance.latitude,
+      'longitude': instance.longitude,
+      'locationUrl': instance.locationUrl,
     };

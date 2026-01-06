@@ -102,17 +102,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     // Browser notification göster
     try {
       if (html.Notification.permission == 'granted') {
-        html.Notification('🔔 Yeni Mesaj Geldi!', 
-          body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
-          icon: 'icons/Icon-192.png',
-        );
+        // html.Notification('🔔 Yeni Mesaj Geldi!', 
+        //   body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
+        //   icon: 'icons/Icon-192.png',
+        // );
       } else if (html.Notification.permission == 'default') {
         final permission = await html.Notification.requestPermission();
         if (permission == 'granted') {
-          html.Notification('🔔 Yeni Mesaj Geldi!', 
-            body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
-            icon: 'icons/Icon-192.png',
-          );
+          // html.Notification('🔔 Yeni Mesaj Geldi!', 
+          //   body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
+          //   icon: 'icons/Icon-192.png',
+          // );
         }
       }
     } catch (e) {

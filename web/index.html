@@ -31,6 +31,21 @@
 
   <title>sedefwpwebapp</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- OneSignal -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "37aedf1e-b897-4033-9ee2-e0252c3ca80d",
+        safari_web_id: "web.onesignal.auto.0654afc0-ce06-4b31-9757-37165e976417",
+        notifyButton: {
+          enable: true,
+        },
+      });
+    });
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:html' as html;
 
 import 'package:flutter/services.dart';
@@ -60,6 +61,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       _loadInitialData();
     });
     
+    // Page visibility değişikliklerini dinle (başka tab'dan döndüğünde)
+    html.document.addEventListener('visibilitychange', (_) {
+      if (!html.document.hidden!) {
+        _refreshUnreadCountOnFocus();
+      }
+    });
+    
+    // Window focus event'ini dinle
+    html.window.onFocus.listen((_) {
+      _refreshUnreadCountOnFocus();
+    });
+    
     // Mesaj listesini dinle ve yeni mesaj geldiğinde scroll et
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.listenManual(
@@ -90,6 +103,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             return;
           }
           
+          // Eğer sayfa hidden ise hiç ses çalma, yalnızca title güncelle
+          // if (html.document.hidden ?? false) {
+          //   print('🔔 Sayfa hidden, ses çalmıyor');
+          //   return;
+          // }
+          
           // Toplam okunmamış mesaj sayısını hesapla
           int currentUnreadCount = 0;
           try {
@@ -106,14 +125,21 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             print('🔔 Unread count hesaplama hatası: $e');
           }
           
-          // Eğer unread count artmışsa ses çal
-          if (currentUnreadCount > _previousUnreadCount) {
-            print('🔔 Unread count arttı: $_previousUnreadCount -> $currentUnreadCount');
-            _playMessageSound();
+          // Eğer unread count değişmişse
+          if (currentUnreadCount != _previousUnreadCount) {
+            print('🔔 Unread count değişti: $_previousUnreadCount -> $currentUnreadCount');
+            
+            // Eğer unread count artmışsa ve sayfa visible ise ses çal
+            if (currentUnreadCount > _previousUnreadCount) {
+              _playMessageSound();
+            }
+            
+            // Yeni değeri sakla ve title'ı güncelle
+            setState(() {
+              _previousUnreadCount = currentUnreadCount;
+            });
+            _updateBrowserTitle(currentUnreadCount);
           }
-          
-          // Yeni değeri sakla
-          _previousUnreadCount = currentUnreadCount;
         },
       );
     });
@@ -149,6 +175,31 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
+  // Sayfa focus aldığında unread count'u yenile
+  Future<void> _refreshUnreadCountOnFocus() async {
+    try {
+      print('🔔 Sayfa focus aldı, veri yenileniyor...');
+      
+      // Direkt olarak getAllMessages çağır (Riverpod state'i günceller)
+      // await _mainViewModel.getAllMessages(ref, context);
+      
+      // Biraz bekle ki state güncellensin
+      // await Future.delayed(const Duration(milliseconds: 500));
+      
+      // // Unread count'u yenile ama DİKKAT: ses çalınmasını engelle
+      // final newUnreadCount = _calculateTotalUnreadCount();
+      // print('🔔 Yenilenen unread count: $_previousUnreadCount -> $newUnreadCount (ses YOK)');
+      
+      // // State'i güncelle (listener ses çalmayacak çünkü `html.document.hidden` false olacak)
+      // setState(() {
+      //   _previousUnreadCount = newUnreadCount;
+      // });
+      // _updateBrowserTitle(newUnreadCount);
+    } catch (e) {
+      print('🔔 Focus refresh hatası: $e');
+    }
+  }
+
   @override
   void dispose() {
     _messageController.dispose();
@@ -161,6 +212,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   // Tarayıcı başlığını güncelle
   void _updateBrowserTitle(int unreadCount) {
     try {
+      final loggedUser = ref.read(_mainViewModel.loggedUser);
+        if (loggedUser.role != "ADMIN") {
+        unreadCount = (unreadCount / 2).ceil(); // ceil ile yuvarla
+      }
+
       if (unreadCount > 0) {
         html.document.title = '($unreadCount) Sedef Döviz WhatsApp Destek';
       } else {
@@ -182,16 +238,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           // Her konuşmanın notAnsweredMessageCount değerlerini topla
           for (var message in phoneData.messages!) {
             if (message.conversation != null) {
-              total += (message.conversation!.notAnsweredMessageCount ?? 0);
+              total += (message.conversation!.notAnsweredMessageCount ?? 0) > 0 ? 1 : 0;
             }
           }
         }
       }
       
       // Admin değilse sayıyı yarıya böl
-      if (loggedUser.role != "ADMIN") {
-        total = (total / 2).ceil(); // ceil ile yuvarla
-      }
+      // if (loggedUser.role != "ADMIN") {
+      //   total = (total / 2).ceil(); // ceil ile yuvarla
+      // }
     } catch (e) {
     }
     return total;
@@ -210,18 +266,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     // Browser notification göster
     try {
       if (html.Notification.permission == 'granted') {
-        html.Notification('🔔 Yeni Mesaj Geldi!', 
-          body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
-          icon: 'icons/Icon-192.png',
-        );
+        // html.Notification('🔔 Yeni Mesaj Geldi!', 
+        //   body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
+        //   icon: 'icons/Icon-192.png',
+        // );
       } else if (html.Notification.permission == 'default') {
         // İzin verilmemişse tekrar sor
         final permission = await html.Notification.requestPermission();
         if (permission == 'granted') {
-          html.Notification('🔔 Yeni Mesaj Geldi!', 
-            body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
-            icon: 'icons/Icon-192.png',
-          );
+          // html.Notification('🔔 Yeni Mesaj Geldi!', 
+          //   body: 'Sedef Döviz WhatsApp\'ta yeni bir mesaj aldınız.',
+          //   icon: 'icons/Icon-192.png',
+          // );
         }
       }
     } catch (e) {
@@ -292,6 +348,51 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       _messageFocusNode.requestFocus();
     });
   }
+
+  // Konum gönderme fonksiyonu
+  Future<void> _sendLocation() async {
+    if (selectedContactPhone == null || selectedMainPhone == null) return;
+
+    try {
+      print('📍 Konum alınıyor...');
+      
+      // Tarayıcıdan konum al
+      // final position = await _getLocationFromBrowser();
+      
+      // if (position == null) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(content: Text('Konum alınamadı'), backgroundColor: Colors.red),
+      //   );
+      //   return;
+      // }
+      // print('📍 Konum alındı: ${position['latitude']}, ${position['longitude']}');
+      
+      // Konum mesajını WhatsApp formatında gönder
+      final locationUrl = 'https://maps.google.com/?q=${40.87944685858887},${29.231872558713608}';
+      
+      _mainViewModel.socket.sink.add(json.encode({
+        "PhoneNumberId": selectedMainPhoneId,
+        "To": selectedContactPhone,
+        "AccessToken": wpAccessToken,
+        "MessageType": "location",
+        "Latitude": 40.87944685858887,
+        "Longitude": 29.231872558713608,
+        "LocationUrl": locationUrl,
+      }));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('📍 Konum gönderildi'), backgroundColor: Colors.green),
+      );
+    } catch (e) {
+      print('📍 Konum gönderme hatası: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Konum gönderilemedi: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  // Tarayıcıdan konum almak
+  
 
   Future<void> _pickAndSendFile() async {
     if (selectedContactPhone == null || selectedMainPhone == null || selectedMainPhoneId == null) {
@@ -1323,6 +1424,19 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
+                // Location button
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: _sendLocation,
+                    icon: const Icon(Icons.location_on, color: Color(0xFF667eea)),
+                    tooltip: 'Konum Gönder',
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _messageController,
@@ -1595,6 +1709,8 @@ class ChatBubble extends ConsumerWidget {
             ),
           ),
         );
+      case "location":
+        return _buildLocationWidget();
       case "image":
         return _buildImageWidget();
       case "document":
@@ -1613,6 +1729,84 @@ class ChatBubble extends ConsumerWidget {
           ),
         );
     }
+  }
+
+  Widget _buildLocationWidget() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.location_on,
+              color: isUser ? Colors.white : const Color(0xFF2D3748),
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Konum',
+              style: TextStyle(
+                color: isUser ? Colors.white : const Color(0xFF2D3748),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: 250,
+          height: 200,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isUser ? Colors.white24 : Colors.grey.shade300,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: GestureDetector(
+              onTap: () {
+                // Haritayı aç
+                if (message.latitude != null && message.longitude != null) {
+                  final url = 'https://maps.google.com/?q=${message.latitude},${message.longitude}';
+                  html.window.open(url, '_blank');
+                }
+              },
+              child: Stack(
+                children: [
+                  // Leaflet Harita HTML
+                  _buildLeafletMap(message.latitude ?? 0, message.longitude ?? 0),
+                  // Marker overlay
+                  Center(
+                    child: Icon(
+                      Icons.location_on,
+                      color: Colors.red,
+                      size: 40,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '${message.latitude?.toStringAsFixed(4)}, ${message.longitude?.toStringAsFixed(4)}',
+          style: TextStyle(
+            color: isUser ? Colors.white70 : Colors.grey.shade600,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildImageWidget() {
@@ -2486,5 +2680,43 @@ class ChatBubble extends ConsumerWidget {
     // PDF viewer widget'ı doğrudan kullan - full screen overlay gösterir
     return PdfViewerWidget(pdfUrl: pdfUrl);
   }
+
+  // Leaflet harita widget'ı
+  Widget _buildLeafletMap(double latitude, double longitude) {
+    return Container(
+      color: Colors.grey.shade200,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.map,
+              size: 48,
+              color: Colors.grey.shade600,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Konum: $latitude, $longitude',
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tıklayarak haritada aç',
+              style: TextStyle(
+                color: Colors.blue,
+                fontSize: 11,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
 }
